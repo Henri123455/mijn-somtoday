@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.somtoday.nl; base-uri 'none'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#1f6fc5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mijn Somtoday">
+  <link rel="apple-touch-icon" href="icon.png">
+  <title>Mijn Somtoday</title>
+  <script src="theme.js"></script>
+  <script src="somdata.js"></script>
+  <script src="demo.js"></script>
+  <script src="web-api.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <!-- PNG eerst: die gebruikt Windows ook voor het icoon in de taakbalk -->
+  <link rel="icon" href="icon.png" type="image/png" sizes="256x256">
+  <link rel="icon" href="logo.svg" type="image/svg+xml" sizes="any">
+  <link rel="manifest" href="manifest.json">
+  <script src="chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="logo.svg" alt="" class="brand-logo">
+        <div class="brand-text">
+          <b>Mijn Somtoday</b>
+          <span id="hello">Je eigen cijfers, rooster en huiswerk</span>
+        </div>
+      </div>
+      <nav id="tabs">
+        <button data-tab="cijfers" class="active" data-short="Cijfers">
+          <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Cijfers
+        </button>
+        <button data-tab="halen" data-short="Halen">
+          <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>Wat moet ik halen?
+        </button>
+        <button data-tab="rooster" data-short="Rooster">
+          <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Rooster
+        </button>
+        <button data-tab="huiswerk" data-short="Huiswerk">
+          <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/></svg>Huiswerk
+        </button>
+        <button data-tab="leermiddelen" data-short="Studie">
+          <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>Leermiddelen
+        </button>
+        <button data-tab="ut" class="tab-ut" data-short="Team"><span class="fc-mini">FC</span>Ultimate Team</button>
+      </nav>
+      <div class="topbar-right">
+        <div id="account"></div>
+        <button id="open-settings" class="gear" aria-label="Instellingen" title="Instellingen">
+          <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="demo-banner" class="banner" hidden>
+    Je ziet nu <b>voorbeelddata</b>. <button id="open-login" class="link">Log in bij Somtoday</button> om je eigen cijfers te zien.
+  </div>
+  <div id="error" class="banner error" hidden></div>
+
+  <main>
+    <!-- Cijfers -->
+    <section id="cijfers" class="tab active">
+      <button id="open-pack" class="pack-cta">
+        <span class="fc-logo" aria-hidden="true">FC</span>
+        <span class="pack-cta-text"><b>Nieuwe cijfers bekijken</b><small id="pack-sub">Open je pack</small></span>
+        <span id="pack-count" class="pack-count" hidden></span>
+      </button>
+
+      <div class="card">
+        <div class="row-between">
+          <h2>Mijn gemiddelden</h2>
+          <span class="hint">Klik op een vak voor de grafiek</span>
+        </div>
+        <div id="avg-grid" class="avg-grid"></div>
+      </div>
+
+      <div class="tiles">
+        <div class="tile"><div class="label">Gemiddelde (alle vakken)</div><div class="big" id="avg-all">–</div></div>
+        <div class="tile"><div class="label">Aantal cijfers</div><div class="big" id="count-all">–</div></div>
+        <div class="tile"><div class="label">Onvoldoendes (gemiddelde)</div><div class="big" id="fails-all">–</div></div>
+        <div class="tile"><div class="label">Laatste cijfer</div><div class="big" id="last-grade">–</div><div class="sub" id="last-grade-sub"></div></div>
+      </div>
+      <div class="card" id="time-card">
+        <div class="row-between">
+          <h2>Cijfers door de tijd</h2>
+          <span id="chart-avg-label" class="hint"></span>
+          <select id="chart-vak"></select>
+        </div>
+        <div class="chart-box"><canvas id="chart-time"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="row-between">
+          <h2>Alle cijfers <span id="gt-count" class="hint"></span></h2>
+          <div class="gt-tools">
+            <input id="gt-search" type="search" placeholder="Zoek een toets…" autocomplete="off">
+            <select id="gt-vak"></select>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="grade-table" class="grade-table">
+          <thead><tr>
+            <th data-sort="datum">Datum</th><th data-sort="vak">Vak</th><th data-sort="omschrijving">Toets</th>
+            <th data-sort="weging" class="num">Weging</th><th data-sort="cijfer" class="num">Cijfer</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- Wat moet ik halen -->
+    <section id="halen" class="tab">
+      <div class="grid2">
+        <div class="card">
+          <h2>Wat moet ik halen?</h2>
+          <label>Vak <select id="calc-vak"></select></label>
+          <div id="calc-manual" hidden>
+            <p class="hint">Vul je cijfers zelf in:</p>
+            <div id="manual-rows"></div>
+            <button id="add-row" class="secondary">+ Cijfer toevoegen</button>
+          </div>
+          <p id="calc-current" class="hint"></p>
+          <div class="inputs">
+            <label>Ik wil gemiddeld staan <input id="calc-target" type="number" step="0.1" min="1" max="10" value="5.5"></label>
+            <label>Weging volgende toets <input id="calc-weight" type="number" step="1" min="1" value="1"></label>
+          </div>
+          <div id="calc-result" class="result"></div>
+        </div>
+        <div class="card">
+          <h2>Wat als ik ... haal?</h2>
+          <p class="hint">Je nieuwe gemiddelde voor elk mogelijk cijfer bij deze weging.</p>
+          <div id="whatif" class="whatif"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rooster -->
+    <section id="rooster" class="tab">
+      <div class="mgd">
+        <div class="mgd-bar">
+          <span class="mgd-title">Agenda</span>
+          <div class="mgd-weeknav">
+            <button id="week-prev" class="mgd-btn" aria-label="Vorige week">«</button>
+            <span id="week-label"></span>
+            <button id="week-next" class="mgd-btn" aria-label="Volgende week">»</button>
+          </div>
+          <button id="week-today" class="mgd-btn">Vandaag</button>
+        </div>
+        <div id="day-tabs" class="mgd-tabs"></div>
+        <div class="mgd-dayhead">
+          <button id="day-prev" class="mgd-arrow" aria-label="Vorige dag">‹</button>
+          <h2 id="day-title"></h2>
+          <button id="day-next" class="mgd-arrow" aria-label="Volgende dag">›</button>
+        </div>
+        <div class="mgd-colhead"><div>Uur</div><div>Tijd</div><div>Les</div></div>
+        <div id="day-list" class="mgd-list"></div>
+      </div>
+    </section>
+
+    <!-- Ultimate Team -->
+    <section id="ut" class="tab">
+      <div class="ut-head">
+        <div class="ut-title"><span class="fc-logo">FC</span><div><h2>Ultimate Team</h2><p class="hint">Bouw je elftal met de kaarten uit je cijferpacks.</p></div></div>
+        <div class="ut-stats">
+          <div class="ut-stat"><span>Rating</span><b id="ut-ovr">0</b></div>
+          <div class="ut-stat"><span>Chemie</span><b id="ut-chem">0/33</b><div class="ut-chem-track"><div id="ut-chem-bar"></div></div></div>
+          <div class="ut-stat"><span>Spelers</span><b id="ut-count">0/11</b></div>
+          <div class="ut-stat"><span>Munten</span><b>🪙 <span class="tm-coins-value">0</span></b></div>
+        </div>
+      </div>
+      <div id="ut-views" class="ut-views">
+        <button data-view="team" class="active">⚽ Mijn team</button>
+        <button data-view="markt">🔄 Transfermarkt</button>
+      </div>
+      <div id="ut-market-view" hidden>
+        <div class="card">
+          <div class="row-between">
+            <h2>Vandaag op de transfermarkt</h2>
+            <span id="tm-refresh" class="hint"></span>
+          </div>
+          <p class="hint">Elke dag 5 nieuwe spelers. Zeldzame kaarten komen minder vaak voorbij. Je verdient munten met elk nieuw cijferpack.</p>
+          <p id="tm-msg" class="tm-msg" aria-live="polite"></p>
+          <div id="tm-offers" class="tm-offers"></div>
+        </div>
+        <div class="card">
+          <h2>Spelers verkopen</h2>
+          <p class="hint">Je krijgt 60% van de waarde. Een verkochte speler gaat ook uit je opstelling.</p>
+          <div id="tm-sell" class="tm-sell"></div>
+        </div>
+      </div>
+      <div id="ut-team-view">
+      <div class="ut-layout">
+        <div class="ut-pitch">
+          <div class="ut-lines"><div class="ut-box top"></div><div class="ut-circle"></div><div class="ut-half"></div><div class="ut-box bottom"></div></div>
+          <div id="ut-pitch-slots"></div>
+        </div>
+        <div class="ut-side card">
+          <div class="row-between">
+            <h2>Mijn club <span id="ut-club-count" class="hint"></span></h2>
+            <select id="ut-filter"></select>
+          </div>
+          <p id="ut-hint" class="hint"></p>
+          <div class="ut-actions">
+            <button id="ut-auto">⚡ Beste team maken</button>
+            <button id="ut-clear" class="secondary">Leegmaken</button>
+            <button id="ut-photo-btn" class="secondary desktop-only">📸 Download foto van je team</button>
+          </div>
+          <p id="ut-photo-msg" class="hint" aria-live="polite"></p>
+          <div id="ut-club" class="ut-club"></div>
+          <details class="ut-help">
+            <summary>Hoe werkt chemie?</summary>
+            <p class="hint">Elke speler kan 3 chemiepunten (◆) krijgen: 1 als hij op een passende plek staat, 1 als dat precies zijn eigen positie is, en 1 als er nog een speler van hetzelfde vak in je team staat.
+            De teamrating is het gemiddelde van je 11 spelers (lege plekken tellen als 0).</p>
+          </details>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- Leermiddelen -->
+    <section id="leermiddelen" class="tab">
+      <div class="row-between lm-head">
+        <h1 class="set-title">Leermiddelen</h1>
+        <input id="lm-search" type="search" placeholder="Zoek een vak, methode of bestand…" autocomplete="off">
+      </div>
+      <div id="lm-list" class="lm-list"><p class="hint">Laden…</p></div>
+    </section>
+
+    <!-- Instellingen -->
+    <section id="instellingen" class="tab">
+      <div class="set-wrap">
+        <h1 class="set-title">Instellingen</h1>
+
+        <div class="card set-card">
+          <h2>Account</h2>
+          <div class="set-account">
+            <span class="me-avatar big" id="set-avatar">?</span>
+            <div class="set-account-text"><b id="set-name">Niet ingelogd</b><span id="set-school"></span></div>
+            <button id="set-login" class="secondary">Inloggen</button>
+          </div>
+        </div>
+
+        <div class="card set-card desktop-only">
+          <h2>Vastmaken</h2>
+          <div class="pin-cards">
+            <div class="pin-card">
+              <div class="pin-visual taskbar" aria-hidden="true">
+                <span class="pv-dot"></span><span class="pv-dot"></span><img src="logo.svg" alt="" class="pv-app"><span class="pv-dot"></span>
+                <span class="pv-menu"><span>Aan taakbalk vastmaken</span></span>
+              </div>
+              <b>Aan de taakbalk</b>
+              <p class="hint">Klik <b>met rechts</b> op het S-logo onderin je taakbalk (de app is nu open) en kies <b>Aan taakbalk vastmaken</b>.</p>
+            </div>
+            <div class="pin-card">
+              <div class="pin-visual start" aria-hidden="true">
+                <span class="pv-search">⊞ &nbsp;Mijn Somtoday</span>
+                <span class="pv-menu"><span>Aan Start vastmaken</span></span>
+              </div>
+              <b>Aan Start</b>
+              <p class="hint">Druk op de <b>Windows-toets</b>, typ <b>Mijn Somtoday</b>, klik <b>met rechts</b> op de app en kies <b>Aan Start vastmaken</b>.</p>
+            </div>
+          </div>
+          <p class="hint set-pin-note">Lukt het zo niet? <button id="set-pin-start" class="link">Toon Mijn Somtoday in de Verkenner</button> en klik daar met rechts op de app.</p>
+          <ol id="set-pin-help" class="set-help" hidden></ol>
+          <div class="set-rows">
+            <label class="set-row"><span><b>Icoon op je bureaublad</b><small>Snelkoppeling "Mijn Somtoday" op je bureaublad.</small></span><input type="checkbox" id="set-desktop" class="switch"></label>
+            <label class="set-row"><span><b>Opstarten met Windows</b><small>De app opent vanzelf als je je computer aanzet.</small></span><input type="checkbox" id="set-autostart" class="switch"></label>
+          </div>
+        </div>
+
+        <div class="card set-card desktop-only">
+          <h2>📱 Op je telefoon of andere laptop</h2>
+          <p class="hint">Zet Mijn Somtoday ook op je telefoon of een andere laptop. Via de QR-code (of de link) krijgt hij zijn eigen login, en je geopende packs, munten en team gaan mee.</p>
+          <div class="set-rows">
+            <label class="set-row"><span><b>Adres van je telefoon-app</b><small>Waar je de telefoon-app online hebt gezet (GitHub Pages).</small></span><input id="set-phone-url" type="url" placeholder="https://jouwnaam.github.io/mijn-somtoday/" autocomplete="off" spellcheck="false"></label>
+            <div class="set-row"><span><b>Telefoon koppelen</b><small>Je logt nog één keer in. Daarna scan je de QR-code met je telefoon.</small></span><button id="set-pair">Telefoon koppelen</button></div>
+          </div>
+        </div>
+
+        <div class="card set-card">
+          <h2>Weergave</h2>          <div class="set-rows">
+            <div class="set-row"><span><b>Thema</b><small>Donkere modus is fijner voor je ogen in het donker.</small></span>
+              <div id="set-theme" class="seg">
+                <button data-theme-choice="system">💻 Systeem</button>
+                <button data-theme-choice="light">☀️ Licht</button>
+                <button data-theme-choice="dark">🌙 Donker</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card set-card">
+          <h2><span class="fc-mini">FC</span> Packs en Ultimate Team</h2>
+          <div class="set-rows">
+            <label class="set-row"><span><b>Geluid bij packs</b><small>Scheuren, whoosh en het melodietje bij een nieuwe kaart.</small></span><input type="checkbox" id="set-sound" class="switch"></label>
+            <div class="set-row"><span><b>Alle packs opnieuw openen</b><small>Al je cijfers worden weer nieuwe packs. Je kaarten blijven in je club.</small></span><button id="set-reset-packs" class="secondary" data-confirm="Zeker weten? Klik nog een keer">Opnieuw openen</button></div>
+            <div class="set-row"><span><b>Team leegmaken</b><small>Haalt alle spelers uit je opstelling.</small></span><button id="set-clear-team" class="secondary" data-confirm="Zeker weten? Klik nog een keer">Leegmaken</button></div>
+          </div>
+        </div>
+
+        <div class="card set-card">
+          <h2>Over de app</h2>
+          <div class="set-rows">
+            <div class="set-row"><span><b>Mijn Somtoday <span id="set-version"></span></b><small>Onofficiële app, niet van Somtoday of Topicus.</small></span></div>
+            <div class="set-row desktop-only"><span><b>Je gegevens</b><small>Je login staat versleuteld op deze computer, in de map van de app.</small></span><button id="set-open-folder" class="secondary">Map openen</button></div>
+            <div class="set-row desktop-only"><span><b>App verwijderen</b><small>Dubbelklik op <i>verwijder.cmd</i> in de map die nu opent.</small></span><button id="set-uninstall" class="secondary">Toon verwijder.cmd</button></div>
+          </div>
+        </div>
+        <p id="set-msg" class="hint set-msg" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- Huiswerk -->
+    <section id="huiswerk" class="tab">
+      <div class="card">
+        <div class="row-between">
+          <h2>Huiswerk komende weken</h2>
+          <label class="inline"><input type="checkbox" id="hide-done"> Verberg wat af is</label>
+        </div>
+        <div id="homework"></div>
+      </div>
+    </section>
+  </main>
+
+
+  <!-- Login -->
+  <dialog id="login">
+    <h2>Inloggen bij Somtoday</h2>
+
+    <!-- Nog geen school gekozen -->
+    <div id="login-pick">
+      <p class="hint">Typ de naam van je school en klik erop. Daarna opent meteen het inlogvenster.</p>
+      <input id="school-search" type="search" placeholder="Bijv. Emelwerda…" autocomplete="off">
+      <ul id="school-results"></ul>
+    </div>
+
+    <!-- School bekend: één knop -->
+    <div id="login-go" hidden>
+      <p>School: <b id="school-name"></b> <button id="change-school" class="link">andere school</button></p>
+      <button id="start-login" class="big">Inloggen</button>
+    </div>
+
+    <!-- Bezig -->
+    <div id="login-wait" class="login-wait" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <div>
+        <b>Log in in het venster dat net is geopend.</b>
+        <p class="hint">Je wachtwoord typ je op de echte inlogpagina van je school, niet in deze app. Daarna gaat het venster vanzelf dicht.</p>
+        <button id="retry-login" class="link">Venster niet te zien? Open het opnieuw</button>
+      </div>
+    </div>
+
+    <p id="login-msg" class="login-msg" hidden></p>
+
+    <details class="fallback">
+      <summary>Lukt het niet?</summary>
+      <p class="hint">Log in je eigen browser in: druk eerst op <b>F12</b>, ga naar <b>Netwerk</b> en klik dan op de knop. Zoek na het inloggen de regel met <code>callback?code=</code>, klik rechts → <i>Kopiëren → URL kopiëren</i>, en plak hem hieronder.</p>
+      <button id="start-login-tab" class="secondary">Inloggen in mijn eigen browser</button>
+      <input id="paste-url" placeholder="somtoday://nl.topicus.somtoday.leerling/oauth/callback?code=…">
+      <button id="paste-go" class="secondary">Inloggen met deze link</button>
+    </details>
+    <div class="row-end"><button id="close-login" class="secondary">Sluiten</button></div>
+  </dialog>
+
+  <!-- Telefoon koppelen -->
+  <dialog id="pair" class="pair-dialog">
+    <h2>📱 Telefoon koppelen</h2>
+    <div id="pair-wait" class="login-wait">
+      <div class="spinner" aria-hidden="true"></div>
+      <div>
+        <b>Log in in het venster dat net is geopend.</b>
+        <p class="hint">Dit wordt een aparte login, alleen voor je telefoon.</p>
+      </div>
+    </div>
+    <div id="pair-done" hidden>
+      <img id="pair-qr" class="pair-qr" alt="QR-code om je telefoon te koppelen">
+      <ol class="pp-steps">
+        <li>Open de <b>camera</b> op je telefoon en richt hem op de QR-code.</li>
+        <li>Tik op de link die verschijnt.</li>
+        <li>Volg de stappen op je telefoon.</li>
+      </ol>
+      <div class="row-end"><button id="pair-copy" class="secondary">Kopieer link voor je andere laptop</button></div>
+      <p class="hint">⚠️ Met deze code kom je in je Somtoday. Laat niemand anders hem scannen. Hij verdwijnt na 10 minuten.</p>
+    </div>
+    <p id="pair-msg" class="login-msg" hidden></p>
+    <div class="row-end"><button id="pair-close" class="secondary">Sluiten</button></div>
+  </dialog>
+
+  <!-- Pack opening -->  <dialog id="pack" class="pack-dialog" aria-label="Nieuwe cijfers">
+    <div id="pack-stage" class="pack-stage"></div>
+    <button id="pack-mute" class="pack-mute" aria-label="Geluid aan/uit">🔊</button>
+  </dialog>
+
+  <script src="app.js"></script>
+  <script src="ut.js"></script>
+  <script src="pack.js"></script>
+  <script src="tm.js"></script>
+  <script src="sync.js"></script>
+  
+  <script src="settings.js"></script>
+  <script src="leermiddelen.js"></script>
+</body>
+</html>
