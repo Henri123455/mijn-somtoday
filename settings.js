@@ -31,6 +31,7 @@ async function loadSettings() {
 
 $('#set-login').addEventListener('click', async (e) => {
   if (e.currentTarget.dataset.loggedIn) {
+    try { localStorage.removeItem('cache-grades'); localStorage.removeItem('cache-lm'); } catch {}
     await api('/api/logout', {});
     await init();
     loadSettings();

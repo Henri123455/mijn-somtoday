@@ -940,3 +940,18 @@ input.switch:focus-visible { outline: 3px solid var(--accent-soft); outline-offs
 .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); flex: none; }
 .seg button { background: none; color: var(--muted); padding: 6px 10px; font-size: 13px; font-weight: 600; border-radius: 8px; }
 .seg button.active { background: var(--card); color: var(--accent); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+/* Leermiddelen: bestanden zijn knoppen die het bestand openen (zoals in Somtoday) */
+.lm-map li { padding: 0; }
+.lm-filebtn { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; padding: 10px 6px; background: none; border: 0; border-radius: 8px;
+  color: var(--text); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.lm-filebtn:hover { background: var(--accent-soft); }
+.lm-filebtn:hover .hint { color: var(--accent); }
+.lm-methode { background: var(--card); box-shadow: 0 1px 2px rgba(20, 40, 80, .06); }
+.lm-methode b { color: var(--accent); }
+
+/* Ultimate Team-account in Instellingen */
+.cloud-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cloud-form input { flex: 1 1 200px; min-width: 0; }
+.cloud-btns { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+/* Touchscreen: geen hangende hover op de tabbalk (anders lijkt de vorige tab nog gekozen) */
+@media (hover: none) { #tabs button:not(.active):hover { color: var(--muted); background: none; } }

@@ -15,6 +15,7 @@ function openedSet() {
 
 function saveOpened(set) {
   try { localStorage.setItem(PACK_KEY, JSON.stringify([...set])); } catch {}
+  window.cloudSave?.();
 }
 
 // Nieuwe cijfers. De app toont alleen cijfers die nu nog meetellen (dit schooljaar, en in het
@@ -48,7 +49,7 @@ const SENTENCES = {
   bronze: ['Op het nippertje gewonnen in de blessuretijd. 😅', 'Brons, maar de punten tellen toch. Door naar de volgende!', 'Net boven de streep. Volle gas door!'],
   red: ['Rode kaart… maar elke topspeler heeft weleens een slechte wedstrijd. Revanche bij de volgende!', 'Deze wedstrijd ging verloren. Tijd voor extra training! 💪', 'Even op de bank, maar je comeback komt eraan.'],
 };
-const sentenceFor = (c) => SENTENCES[c.tier.id][hashOf('zin' + c.g.id) % 3];
+const sentenceFor = (c) => (SENTENCES[c.tier.id] || SENTENCES.toty)[hashOf('zin' + c.g.id) % 3];
 const WALKOUT = ['toty', 'rare', 'gold']; // vanaf goud een volledige walkout met vuurwerk
 
 // ---------- Geluid (zelf gemaakt met de Web Audio API, geen bestanden nodig) ----------

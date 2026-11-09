@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.somtoday.nl; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.somtoday.nl https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; base-uri 'none'; form-action 'self'">
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#1f6fc5">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,15 +13,16 @@
   <link rel="apple-touch-icon" href="icon.png">
   <title>Mijn Somtoday</title>
   <script src="theme.js"></script>
-  <script src="somdata.js"></script>
-  <script src="demo.js"></script>
-  <script src="web-api.js"></script>
+  <script defer src="somdata.js"></script>
+  <script defer src="demo.js"></script>
+  <script defer src="web-api.js"></script>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ut.css">
   <!-- PNG eerst: die gebruikt Windows ook voor het icoon in de taakbalk -->
   <link rel="icon" href="icon.png" type="image/png" sizes="256x256">
   <link rel="icon" href="logo.svg" type="image/svg+xml" sizes="any">
   <link rel="manifest" href="manifest.json">
-  <script src="chart.umd.min.js"></script>
+  <script defer src="chart.umd.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -166,17 +167,18 @@
     <!-- Ultimate Team -->
     <section id="ut" class="tab">
       <div class="ut-head">
-        <div class="ut-title"><span class="fc-logo">FC</span><div><h2>Ultimate Team</h2><p class="hint">Bouw je elftal met de kaarten uit je cijferpacks.</p></div></div>
+        <div class="ut-title"><span class="fc-logo">UT</span><div><h2>Somtoday Ultimate Team</h2><p class="hint">Je cijfers zijn je spelers. Bouw je elftal, speel elke dag een wedstrijd en verdien munten.</p></div></div>
         <div class="ut-stats">
           <div class="ut-stat"><span>Rating</span><b id="ut-ovr">0</b></div>
           <div class="ut-stat"><span>Chemie</span><b id="ut-chem">0/33</b><div class="ut-chem-track"><div id="ut-chem-bar"></div></div></div>
           <div class="ut-stat"><span>Spelers</span><b id="ut-count">0/11</b></div>
-          <div class="ut-stat"><span>Munten</span><b>🪙 <span class="tm-coins-value">0</span></b></div>
+          <div class="ut-stat"><span>Munten</span><b><span class="coin"></span><span class="tm-coins-value">0</span></b></div>
         </div>
       </div>
       <div id="ut-views" class="ut-views">
-        <button data-view="team" class="active">⚽ Mijn team</button>
-        <button data-view="markt">🔄 Transfermarkt</button>
+        <button data-view="team" class="active">Mijn team</button>
+        <button data-view="match">Wedstrijden</button>
+        <button data-view="markt">Transfermarkt</button>
       </div>
       <div id="ut-market-view" hidden>
         <div class="card">
@@ -184,7 +186,7 @@
             <h2>Vandaag op de transfermarkt</h2>
             <span id="tm-refresh" class="hint"></span>
           </div>
-          <p class="hint">Elke dag 5 nieuwe spelers. Zeldzame kaarten komen minder vaak voorbij. Je verdient munten met elk nieuw cijferpack.</p>
+          <p class="hint">Elke dag 8 nieuwe spelers en de prijzen schommelen per dag. Je kunt maximaal 2 spelers per dag kopen. Munten verdien je met nieuwe cijfers en wedstrijden.</p>
           <p id="tm-msg" class="tm-msg" aria-live="polite"></p>
           <div id="tm-offers" class="tm-offers"></div>
         </div>
@@ -194,12 +196,17 @@
           <div id="tm-sell" class="tm-sell"></div>
         </div>
       </div>
+      <div id="ut-match-view" hidden>
+        <div id="mt-today" class="mt-grid"></div>
+        <div class="card"><h2>Laatste wedstrijden</h2><div id="mt-history" class="mt-history"></div></div>
+      </div>
       <div id="ut-team-view">
       <div class="ut-layout">
         <div class="ut-pitch">
           <div class="ut-lines"><div class="ut-box top"></div><div class="ut-circle"></div><div class="ut-half"></div><div class="ut-box bottom"></div></div>
           <div id="ut-pitch-slots"></div>
         </div>
+        <div class="ut-bench-wrap"><span class="ut-bench-title">Wisselbank</span><div id="ut-bench" class="ut-bench"></div></div>
         <div class="ut-side card">
           <div class="row-between">
             <h2>Mijn club <span id="ut-club-count" class="hint"></span></h2>
@@ -207,16 +214,17 @@
           </div>
           <p id="ut-hint" class="hint"></p>
           <div class="ut-actions">
-            <button id="ut-auto">⚡ Beste team maken</button>
+            <button id="ut-auto">Beste team maken</button>
             <button id="ut-clear" class="secondary">Leegmaken</button>
-            <button id="ut-photo-btn" class="secondary desktop-only">📸 Download foto van je team</button>
+            <button id="ut-photo-btn" class="secondary desktop-only">Foto van je team</button>
           </div>
           <p id="ut-photo-msg" class="hint" aria-live="polite"></p>
           <div id="ut-club" class="ut-club"></div>
           <details class="ut-help">
             <summary>Hoe werkt chemie?</summary>
-            <p class="hint">Elke speler kan 3 chemiepunten (◆) krijgen: 1 als hij op een passende plek staat, 1 als dat precies zijn eigen positie is, en 1 als er nog een speler van hetzelfde vak in je team staat.
-            De teamrating is het gemiddelde van je 11 spelers (lege plekken tellen als 0).</p>
+            <p class="hint">Zoals in FC: een speler krijgt alleen chemie op zijn eigen positie. Punten komen van andere spelers in je elftal met dezelfde
+              <b>club</b> (2/5/7 spelers = 1/2/3 punten), hetzelfde <b>land</b> (2/5/8) of dezelfde <b>competitie</b> (3/5/8). Maximaal 3 per speler, 33 voor het team.
+              Iconen hebben altijd 3 chemie, tellen dubbel voor hun land en geven elke competitie +1. Hoe meer chemie, hoe sterker je team in wedstrijden.</p>
           </details>
         </div>
       </div>
@@ -274,6 +282,11 @@
           </div>
         </div>
 
+        <div class="card set-card">
+          <h2>Somtoday Ultimate Team-account</h2>
+          <p class="hint">Met een account is je Ultimate Team (packs, munten, team, wedstrijden) op je pc, telefoon en Chrome-extensie hetzelfde. Je Somtoday-login en cijfers gaan er niet heen.</p>
+          <div id="cloud-box" class="set-rows"></div>
+        </div>
         <div class="card set-card desktop-only">
           <h2>📱 Op je telefoon of andere laptop</h2>
           <p class="hint">Zet Mijn Somtoday ook op je telefoon of een andere laptop. Via de QR-code (of de link) krijgt hij zijn eigen login, en je geopende packs, munten en team gaan mee.</p>
@@ -397,13 +410,17 @@
     <button id="pack-mute" class="pack-mute" aria-label="Geluid aan/uit">🔊</button>
   </dialog>
 
-  <script src="app.js"></script>
-  <script src="ut.js"></script>
-  <script src="pack.js"></script>
-  <script src="tm.js"></script>
-  <script src="sync.js"></script>
+  <script defer src="app.js"></script>
+  <script defer src="players.js"></script>
+  <script defer src="ut.js"></script>
+  <script defer src="pack.js"></script>
+  <script defer src="tm.js"></script>
+  <script defer src="match.js"></script>
+  <script defer src="cloud-config.js"></script>
+  <script defer src="cloud.js"></script>
+  <script defer src="sync.js"></script>
   
-  <script src="settings.js"></script>
-  <script src="leermiddelen.js"></script>
+  <script defer src="settings.js"></script>
+  <script defer src="leermiddelen.js"></script>
 </body>
 </html>

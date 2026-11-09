@@ -40,9 +40,9 @@ function lmDetail(v, q) {
     ${v.bestanden.length ? section('📁 Bestanden van je docent', `${Object.entries(mappen).map(([map, list]) => `
       <details class="lm-map" ${q || Object.keys(mappen).length === 1 ? 'open' : ''}>
         <summary><span>📁 ${esc(map)}</span><span class="lm-badge">${list.length}</span></summary>
-        <ul>${list.map((b) => `<li><span class="lm-file">${LM_ICON[lmExt(b.bestand)] || '📄'} ${esc(b.naam)}</span><span class="hint">${lmExt(b.bestand).toUpperCase()} · ${lmSize(b.grootte)}</span></li>`).join('')}</ul>
+        <ul>${list.map((b) => `<li><button class="lm-filebtn" data-file="${esc(b.id)}"><span class="lm-file">${LM_ICON[lmExt(b.bestand)] || '📄'} ${esc(b.naam)}</span><span class="hint">${lmExt(b.bestand).toUpperCase()} · ${lmSize(b.grootte)} · Openen</span></button></li>`).join('')}</ul>
       </details>`).join('')}
-      <a class="lm-open" href="https://leerling.somtoday.nl" data-ext>Bestanden openen in Somtoday ↗</a>`) : ''}`;
+`) : ''}`;
 }
 
 function renderLeermiddelen() {
@@ -63,8 +63,11 @@ function renderLeermiddelen() {
 
 async function loadLeermiddelen() {
   if (lmItems) return renderLeermiddelen();
+  // Meteen de vorige versie tonen (Somtoday is traag bij veel vakken), daarna verversen.
+  try { const c = JSON.parse(localStorage.getItem('cache-lm') || 'null'); if (c?.length) { lmItems = c; renderLeermiddelen(); lmItems = null; } } catch {}
   try {
     const res = await api('/api/leermiddelen');
+    if (!res.demo) try { localStorage.setItem('cache-lm', JSON.stringify(res.items)); } catch {}
     if (res.demo) {
       $('#lm-list').innerHTML = '<p class="hint">Log in bij Somtoday om je leermiddelen te zien.</p>';
       return;
@@ -84,6 +87,16 @@ $('#lm-list').addEventListener('click', (e) => {
     renderLeermiddelen();
     // Smal scherm (telefoon): de inhoud staat onder de lijst, dus daarheen scrollen.
     if (matchMedia('(max-width: 800px)').matches) $('.lm-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  // Bestand van je docent: tijdelijke downloadlink ophalen bij Somtoday en openen (zoals de Somtoday-site).
+  const f = e.target.closest('[data-file]');
+  if (f) {
+    const label = f.querySelector('.hint'); const old = label.textContent; label.textContent = 'Openen…';
+    api('/api/bestand?id=' + encodeURIComponent(f.dataset.file))
+      .then((r) => api('/api/open-url', { url: r.url }).catch(() => window.open(r.url, '_blank', 'noopener')))
+      .catch((err) => { label.textContent = err.message; setTimeout(() => { label.textContent = old; }, 4000); return; })
+      .finally(() => { if (label.textContent === 'Openen…') label.textContent = old; });
     return;
   }
   const a = e.target.closest('a[data-ext]');

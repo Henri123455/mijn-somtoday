@@ -413,10 +413,23 @@ function renderTimeChart() {
 }
 $('#chart-vak').addEventListener('change', renderTimeChart);
 
+// Snel opstarten: eerst je laatst bekende cijfers tonen (van dit apparaat), daarna verversen bij Somtoday.
+let gradesShownFromCache = false;
+function showCachedGrades() {
+  try {
+    const c = JSON.parse(localStorage.getItem('cache-grades') || 'null');
+    if (!c?.grades?.length || grades.length) return;
+    grades = c.grades; averages = c.averages || {};
+    gradesShownFromCache = true;
+    renderGrades();
+  } catch {}
+}
 async function loadGrades() {
+  showCachedGrades();
   try {
     const data = await api('/api/grades');
     grades = data.grades;
+    if (!data.demo) try { localStorage.setItem('cache-grades', JSON.stringify({ grades: data.grades, averages: data.averages || {} })); } catch {}
     window.applySync?.(); // voortgang van de laptop (via de koppel-QR)
     averages = data.averages || {};
     $('#demo-banner').hidden = !data.demo;
@@ -691,6 +704,7 @@ function doneSet() {
 }
 function saveDone(set) {
   try { localStorage.setItem('hw-done', JSON.stringify([...set])); } catch {}
+  window.cloudSave?.();
 }
 let homework = [];
 
@@ -844,7 +858,7 @@ async function loadStatus() {
     ? `<span class="me"><span class="me-avatar">${esc((s.naam || '?').charAt(0).toUpperCase())}</span><span class="me-name">${esc(s.naam)}</span></span>
        <button id="logout" class="secondary small">Uitloggen</button>`
     : '';
-  $('#logout')?.addEventListener('click', async () => { await api('/api/logout', {}); init(); });
+  $('#logout')?.addEventListener('click', async () => { try { localStorage.removeItem('cache-grades'); localStorage.removeItem('cache-lm'); } catch {} grades = []; await api('/api/logout', {}); init(); });
 }
 
 async function init() {

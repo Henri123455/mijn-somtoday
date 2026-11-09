@@ -146,13 +146,24 @@
     'GET /api/leermiddelen': async () => (login?.account
       ? { items: await cached('leermiddelen', () => SomData.getLeermiddelen(api, login.account.id)) }
       : { items: [], demo: true }),
+    'GET /api/bestand': async (q) => {
+      const id = String(q.get('id') || '');
+      if (!/^[\w.-]{8,120}$/.test(id)) throw new Error('Ongeldig bestand.');
+      const t = await token();
+      const res = await fetch(`${t.api}/rest/v1/gcs/download/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t.access}`, Accept: 'text/plain' } });
+      if (!res.ok) throw new Error(`Somtoday gaf fout ${res.status} bij het openen van het bestand.`);
+      const url = (await res.text()).trim();
+      if (!/^https:\/\/storage\.googleapis\.com\//.test(url)) throw new Error('Somtoday gaf geen geldige downloadlink.');
+      return { url };
+    },
     'POST /api/logout': async () => {
       login = null;
       write(KEY, null);
       Object.keys(localStorage).filter((k) => k.startsWith('som-cache-')).forEach((k) => localStorage.removeItem(k));
       return { ok: true };
     },
-    'POST /api/open-url': async (q, body) => { window.open(body.url, '_blank', 'noopener'); return { ok: true }; },
+    // Na het ophalen van een link blokkeert Safari soms een nieuw tabblad: dan in hetzelfde venster openen.
+    'POST /api/open-url': async (q, body) => { const win = window.open(body.url, '_blank', 'noopener'); if (!win) location.href = body.url; return { ok: true }; },
   };
 
   async function handle(path, body) {
@@ -249,7 +260,7 @@
     await ready;
     if (pairError) showPair(pairError.message);
     else if (fromLink && !login?.account) showInstall();
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 
   window.WEB_API = { handle, openLogin: () => showPair() };
