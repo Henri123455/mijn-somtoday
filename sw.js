@@ -1,5 +1,5 @@
 // Bewaart de app-bestanden, zodat de app ook zonder internet opent. Somtoday zelf gaat altijd via internet.
-const CACHE = 'mijn-somtoday-1.4.0-mw9q9yev';
+const CACHE = 'mijn-somtoday-1.5.0-mw9r1gsj';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(
@@ -16,4 +16,14 @@ self.addEventListener('fetch', (e) => {
   });
   e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || net).catch(() => net));
   e.waitUntil(net.catch(() => {}));
+});
+
+// Tik op een melding: de app openen (of naar voren halen) op het juiste tabblad.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    const c = list[0];
+    if (c) { c.postMessage({ openTab: e.notification.data?.tab }); return c.focus(); }
+    return self.clients.openWindow('./');
+  }));
 });

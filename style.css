@@ -955,3 +955,44 @@ input.switch:focus-visible { outline: 3px solid var(--accent-soft); outline-offs
 .cloud-btns { display: inline-flex; gap: 8px; flex-wrap: wrap; }
 /* Touchscreen: geen hangende hover op de tabbalk (anders lijkt de vorige tab nog gekozen) */
 @media (hover: none) { #tabs button:not(.active):hover { color: var(--muted); background: none; } }
+
+/* ---------- Pack-opening (walkout zoals FC) ---------- */
+.pack-stage[data-tier="icon"] { --glow: #fff3d1; }
+.pk-pack.opening { animation: pk-shake2 1.2s ease-in forwards; }
+.pk-pack.opening .pk-pack-flap { animation: pk-flap .45s ease-in .8s forwards; }
+.pk-pack.opening::after { content: ''; position: absolute; left: 50%; top: 0; width: 70%; height: 100%; translate: -50% 0; opacity: 0;
+  background: radial-gradient(60% 50% at 50% 30%, #fff, var(--glow) 40%, transparent 70%); animation: pk-glowup .9s ease-in .3s forwards; }
+@keyframes pk-shake2 {
+  0% { transform: none; } 12% { transform: rotate(-3deg) scale(1.02); } 24% { transform: rotate(3deg) scale(1.04); }
+  36% { transform: rotate(-4deg) scale(1.05); } 48% { transform: rotate(4deg) scale(1.07); } 60% { transform: rotate(-2deg) scale(1.08); }
+  75% { transform: scale(1.1); filter: brightness(1.8); } 100% { transform: scale(1.22); filter: brightness(3.5); opacity: .9; }
+}
+@keyframes pk-glowup { to { opacity: 1; } }
+.pk-beam { position: absolute; left: 50%; bottom: 0; width: 120px; height: 100%; translate: -50% 0; transform-origin: bottom;
+  background: linear-gradient(0deg, #fff 0%, var(--glow) 30%, color-mix(in srgb, var(--glow) 40%, transparent) 70%, transparent);
+  filter: blur(6px); animation: pk-beam 1.4s cubic-bezier(.2, .8, .3, 1) both; mix-blend-mode: screen; }
+.pk-beam.big { width: 220px; animation-duration: 1.9s; }
+.pk-beam i { position: absolute; inset: 0 35%; background: #fff; filter: blur(4px); }
+@keyframes pk-beam { 0% { transform: scaleY(0) scaleX(.3); opacity: 0; } 25% { opacity: 1; } 55% { transform: scaleY(1) scaleX(1); opacity: 1; } 100% { transform: scaleY(1) scaleX(1.6); opacity: 0; } }
+.pk-sparks { position: absolute; inset: 0; pointer-events: none; }
+.pk-sparks i { position: absolute; bottom: -10px; width: 4px; height: 14px; border-radius: 3px; background: var(--glow); box-shadow: 0 0 10px var(--glow); opacity: 0; animation: pk-spark 1.6s ease-out forwards; }
+.pk-sparks i:nth-child(odd) { width: 3px; height: 9px; }
+.pk-sparks i.s0 { left: 44%; animation-delay: .05s; } .pk-sparks i.s1 { left: 52%; animation-delay: .2s; } .pk-sparks i.s2 { left: 48%; animation-delay: .35s; }
+.pk-sparks i.s3 { left: 56%; animation-delay: .1s; } .pk-sparks i.s4 { left: 41%; animation-delay: .45s; } .pk-sparks i.s5 { left: 59%; animation-delay: .3s; }
+.pk-sparks i:nth-child(n+7) { margin-left: -14px; animation-duration: 1.9s; } .pk-sparks i:nth-child(n+13) { margin-left: 16px; animation-duration: 1.3s; }
+@keyframes pk-spark { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-85vh); } }
+.pk-grade { display: inline-block; margin: 14px auto 2px; padding: 6px 22px; border-radius: 14px; font-size: 64px; font-weight: 900; line-height: 1;
+  color: #fff; background: linear-gradient(180deg, #34425e, #19202f); box-shadow: 0 0 40px color-mix(in srgb, var(--glow) 60%, transparent), inset 0 0 0 2px rgba(255, 255, 255, .25);
+  font-family: "Bahnschrift", "Segoe UI", sans-serif; animation: pk-zoom .6s cubic-bezier(.2, 1.3, .4, 1) .25s both; }
+.pk-grade.top { background: linear-gradient(180deg, #19c37d, #0b7a4b); } .pk-grade.bad { background: linear-gradient(180deg, #f0525c, #9b111e); }
+.pk-flag .fc-flagsvg { width: 190px; height: 127px; margin: 6px auto 14px; border-radius: 8px; box-shadow: 0 0 50px color-mix(in srgb, var(--glow) 60%, transparent); }
+.pk-crest .fc-crest { width: 130px; height: 150px; margin: 6px auto 14px; filter: drop-shadow(0 0 30px var(--glow)); }
+.pk-flag, .pk-crest { animation: pk-zoom .7s cubic-bezier(.2, 1.3, .4, 1) both; }
+@media (max-width: 600px) { .pk-pos { font-size: 110px; } .pk-big-text { font-size: 30px; } .pk-grade { font-size: 52px; } }
+@media (prefers-reduced-motion: reduce) { .pk-beam, .pk-sparks i { animation-duration: .01s; } }
+.set-row.sub { padding-left: 18px; }
+.set-row.sub b { font-weight: 600; }
+.pp-schools { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow: auto; margin: 8px 0; }
+.pp-schools button { text-align: left; justify-content: flex-start; }
+.pp-schools small { opacity: .7; margin-left: 4px; }
+#pp-school { width: 100%; margin-top: 8px; }

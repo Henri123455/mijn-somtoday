@@ -6,6 +6,8 @@
   const CLIENT_ID = 'somtoday-leerling-native';
   const KEY = 'som-login';
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  // Chrome-extensie: daar kun je zelf inloggen met je eigen school (de extensie vangt de Somtoday-login op).
+  const EXT = location.protocol === 'chrome-extension:' && !!window.chrome?.runtime?.id;
   const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   const read = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
@@ -40,7 +42,7 @@
         if (err.status === 400 || err.status === 401) {
           login = null;
           write(KEY, null);
-          throw new Error('Je login op deze telefoon is verlopen. Koppel je telefoon opnieuw via de laptop-app.');
+          throw new Error(EXT ? 'Je login is verlopen. Log opnieuw in.' : 'Je login op deze telefoon is verlopen. Koppel je telefoon opnieuw via de laptop-app.');
         }
         throw new Error('Somtoday is even niet bereikbaar. Probeer het zo opnieuw.');
       }
@@ -97,6 +99,56 @@
   const pending = read('som-koppel');
   if (pending && (standalone || !isIOS && !fromLink)) {
     ready = pairWith(pending).catch((err) => { pairError = err; });
+  }
+
+  // ---------- Inloggen in de extensie (elke school) ----------
+  const SCHOOLS_URL = 'https://raw.githubusercontent.com/NONtoday/organisaties.json/refs/heads/main/organisaties.json';
+  let schools = null;
+  async function searchSchools(q) {
+    if (!schools) {
+      const res = await fetch(SCHOOLS_URL);
+      if (!res.ok) throw new Error('De schoollijst kon niet geladen worden.');
+      schools = [];
+      (function collect(node) {
+        if (Array.isArray(node)) return node.forEach(collect);
+        if (node && typeof node === 'object') {
+          if (node.uuid && node.naam) schools.push({ uuid: node.uuid, naam: node.naam, plaats: node.plaats || '' });
+          Object.values(node).forEach((v) => typeof v === 'object' && collect(v));
+        }
+      })(await res.json());
+    }
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    return schools.filter((s) => words.every((w) => `${s.naam} ${s.plaats}`.toLowerCase().includes(w))).slice(0, 12);
+  }
+  const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  async function extLogin(school) {
+    const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+    const state = b64url(crypto.getRandomValues(new Uint8Array(8)));
+    write('som-ext-pending', { verifier, state, school });
+    const params = new URLSearchParams({
+      redirect_uri: 'somtoday://nl.topicus.somtoday.leerling/oauth/callback', client_id: CLIENT_ID, state,
+      response_type: 'code', scope: 'openid', code_challenge: challenge, code_challenge_method: 'S256', tenant_uuid: school.uuid,
+    });
+    chrome.tabs.create({ url: `${AUTH}/oauth2/authorize?${params}` });
+  }
+  async function extFinish(callbackUrl) {
+    const pend = read('som-ext-pending');
+    const q = new URLSearchParams(String(callbackUrl).split('?')[1] || '');
+    if (!pend || q.get('state') !== pend.state || !q.get('code')) throw new Error('Deze login hoort bij een oudere poging. Probeer opnieuw.');
+    write('som-ext-pending', null);
+    const t = await tokenRequest({ grant_type: 'authorization_code', redirect_uri: 'somtoday://nl.topicus.somtoday.leerling/oauth/callback', code: q.get('code'), code_verifier: pend.verifier });
+    login = { refresh: t.refresh_token, access: t.access_token, api: t.somtoday_api_url || 'https://api.somtoday.nl',
+      expires: Date.now() + (Number(t.expires_in) || 3600) * 1000, school: { naam: pend.school.naam, uuid: pend.school.uuid } };
+    login.account = await SomData.getAccount(api);
+    write(KEY, login);
+    write('som-school', pend.school);
+  }
+  if (EXT) {
+    const take = (url) => { if (url) busy(extFinish(url)); };
+    chrome.runtime.onMessage.addListener((m) => { if (m?.somCallback) { chrome.storage?.local.remove('somCallback'); take(m.somCallback); } });
+    chrome.storage?.local.get('somCallback').then((r) => { if (r?.somCallback) { chrome.storage.local.remove('somCallback'); take(r.somCallback); } }).catch(() => {});
   }
 
   // ---------- Bewaarde gegevens, voor als je even geen internet hebt ----------
@@ -198,7 +250,32 @@
     if (!d.open) d.showModal();
   }
 
+  function showExtLogin(message) {
+    const last = read('som-school');
+    show(`<h2>Inloggen bij Somtoday</h2>
+      ${message ? `<p class="login-msg">${esc(message)}</p>` : ''}
+      ${last ? `<button data-pp="school" data-uuid="${esc(last.uuid)}" data-naam="${esc(last.naam)}">Inloggen bij ${esc(last.naam)}</button><p class="hint">Of kies een andere school:</p>` : '<p>Zoek je school en log in zoals je altijd doet. Er opent een tabblad van Somtoday; dat sluit vanzelf als je bent ingelogd.</p>'}
+      <input id="pp-school" type="search" placeholder="Naam van je school of plaats" autocomplete="off">
+      <div id="pp-schools" class="pp-schools"></div>
+      <p class="hint">Je login blijft alleen in deze extensie. Deze app is niet van Somtoday.</p>`);
+    const inp = document.getElementById('pp-school');
+    let timer;
+    inp.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        const box = document.getElementById('pp-schools');
+        try {
+          const list = await searchSchools(inp.value);
+          box.innerHTML = list.map((s) => `<button class="secondary" data-pp="school" data-uuid="${esc(s.uuid)}" data-naam="${esc(s.naam)}"><b>${esc(s.naam)}</b> <small>${esc(s.plaats)}</small></button>`).join('')
+            || (inp.value.trim() ? '<p class="hint">Geen school gevonden.</p>' : '');
+        } catch (err) { box.innerHTML = `<p class="login-msg">${esc(err.message)}</p>`; }
+      }, 200);
+    });
+    if (!last) inp.focus();
+  }
+
   function showPair(message) {
+    if (EXT) return showExtLogin(message);
     show(`<h2>Koppel je telefoon</h2>
       ${message ? `<p class="login-msg">${esc(message)}</p>` : ''}
       <ol class="pp-steps">
@@ -234,7 +311,7 @@
     d.querySelectorAll('button').forEach((b) => { b.disabled = true; });
     try {
       await promise;
-      d.close();
+      if (d.open) d.close();
       init();
     } catch (err) {
       showPair(err.message);
@@ -244,6 +321,11 @@
   async function onClick(e) {
     const act = e.target.closest('[data-pp]')?.dataset.pp;
     if (act === 'close') dialog().close();
+    if (act === 'school') {
+      const b = e.target.closest('[data-pp]');
+      extLogin({ uuid: b.dataset.uuid, naam: b.dataset.naam });
+      show('<h2>Log in in het nieuwe tabblad</h2><p>Log in bij Somtoday in het tabblad dat net is geopend. Daarna sluit het vanzelf en ben je hier ingelogd.</p>');
+    }
     if (act === 'paste') busy(pairWith(document.getElementById('pp-code').value));
     if (act === 'here') busy(pairWith(read('som-koppel') || ''));
     if (act === 'copy') {

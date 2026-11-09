@@ -33,6 +33,7 @@ function superStatus() {
   return { days, wins, unlocked: days >= 5 && wins >= 5 && !usedSuper, usedSuper };
 }
 const playedToday = () => readM().some((m) => !m.super && m.d === dayStr());
+window.utPlayedToday = playedToday;
 
 // ---------- Teamsterkte ----------
 function effOvr(c, slot, chem) {

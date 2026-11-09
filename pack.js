@@ -50,7 +50,7 @@ const SENTENCES = {
   red: ['Rode kaart… maar elke topspeler heeft weleens een slechte wedstrijd. Revanche bij de volgende!', 'Deze wedstrijd ging verloren. Tijd voor extra training! 💪', 'Even op de bank, maar je comeback komt eraan.'],
 };
 const sentenceFor = (c) => (SENTENCES[c.tier.id] || SENTENCES.toty)[hashOf('zin' + c.g.id) % 3];
-const WALKOUT = ['toty', 'rare', 'gold']; // vanaf goud een volledige walkout met vuurwerk
+const WALKOUT = ['toty', 'icon', 'rare', 'gold']; // vanaf goud een volledige walkout met vuurwerk
 
 // ---------- Geluid (zelf gemaakt met de Web Audio API, geen bestanden nodig) ----------
 let audio = null;
@@ -170,40 +170,60 @@ function openAll() {
   showSummary();
 }
 
-// 2. Openscheuren + vuurpijl
+// 2. Openscheuren: het pack trilt, de bovenkant scheurt eraf en er schiet licht uit (in de kleur van de kaart).
 function ripPack() {
   step = 'rip';
   const el = $('#pack-stage');
   el.dataset.tier = current.tier.id; // de kleur van het licht verraadt al iets…
   el.querySelector('.pk-scene:not(.leaving) .pk-pack').classList.add('opening');
-  el.querySelector('.pk-scene:not(.leaving) .pk-hint').textContent = '';
+  const hint = el.querySelector('.pk-scene:not(.leaving) .pk-hint');
+  if (hint) hint.textContent = '';
+  el.querySelector('.pk-scene:not(.leaving) .pk-actions')?.remove();
   sfx.rip();
-  later(showFlare, 1300);
+  later(showFlare, 1250);
 }
 
+// Lichtstraal uit de grond (walkout) of een korte flits (gewone kaart).
 function showFlare() {
   step = 'flare';
   const walk = WALKOUT.includes(current.tier.id);
-  stage('<div class="pk-flash"></div><div class="pk-flare"></div>', 'flare', current.tier.id);
+  stage(`<div class="pk-flash"></div><div class="pk-beam${walk ? ' big' : ''}"><i></i></div>
+    <div class="pk-sparks">${Array.from({ length: 18 }, (_, n) => `<i class="s${n % 6}"></i>`).join('')}</div>`, 'flare', current.tier.id);
   sfx.whoosh();
-  if (walk) { setTimeout(sfx.boom, 900); fireworks(fx(), current.tier.id === 'toty' ? 4 : 2); }
-  later(showVak, walk ? 2200 : 1200);
+  if (walk) { setTimeout(sfx.boom, 700); fireworks(fx(), current.tier.id === 'toty' || current.tier.id === 'icon' ? 3 : 2); }
+  later(showVak, walk ? 1900 : 1000);
 }
 
-// 3. Het vak, zoals het land bij een walkout
+// 3. Het vak en je cijfer
 function showVak() {
   step = 'vak';
+  const g = current.g;
+  const cijfer = g.resultaat || (g.cijfer != null ? String(g.cijfer).replace('.', ',') : '');
+  const cls = g.cijfer == null ? '' : g.cijfer >= 8 ? 'top' : g.cijfer >= 5.5 ? 'ok' : 'bad';
   stage(`
     <div class="pk-reveal">
       <div class="pk-label">VAK</div>
-      <div class="pk-big-icon">${vakIcon(current.g.vak)}</div>
-      <div class="pk-big-text">${esc(vakKort(current.g.vak))}</div>
+      <div class="pk-big-text">${esc(vakKort(g.vak))}</div>
+      ${cijfer ? `<div class="pk-grade ${cls}">${esc(cijfer)}</div>` : ''}
+      <div class="pk-sub">${esc(g.omschrijving || 'Toets')}${g.weging ? ` · weging ${g.weging}` : ''}</div>
     </div>`, 'walkout', current.tier.id);
   sfx.tick();
-  later(showPosition, WALKOUT.includes(current.tier.id) ? 2300 : 1500);
+  later(WALKOUT.includes(current.tier.id) ? showNation : showCard, WALKOUT.includes(current.tier.id) ? 2100 : 1700);
 }
 
-// 4. De positie van de speler
+// 4. Walkout zoals in FC: land, positie, club
+function showNation() {
+  step = 'land';
+  const p = current.player;
+  stage(`
+    <div class="pk-reveal">
+      <div class="pk-label">LAND</div>
+      <div class="pk-flag">${flagSVG(p.nat)}</div>
+      <div class="pk-big-text small">${esc(NATIONS[p.nat] || p.nat)}</div>
+    </div>`, 'walkout', current.tier.id);
+  sfx.tick();
+  later(showPosition, 1700);
+}
 function showPosition() {
   step = 'positie';
   const p = current.player;
@@ -212,10 +232,22 @@ function showPosition() {
       <div class="pk-label">POSITIE</div>
       <div class="pk-pos">${p.pos}</div>
       <div class="pk-big-text small">${POS_NAMES[p.pos]}</div>
-      <div class="pk-sub">${esc(current.g.omschrijving || 'Toets')} · weging ${current.g.weging}</div>
     </div>`, 'walkout', current.tier.id);
   sfx.tick();
-  later(showSilhouette, WALKOUT.includes(current.tier.id) ? 2300 : 1500);
+  later(showClub, 1700);
+}
+function showClub() {
+  step = 'club';
+  const p = current.player;
+  stage(`
+    <div class="pk-reveal">
+      <div class="pk-label">CLUB</div>
+      <div class="pk-crest">${crestSVG(p.club)}</div>
+      <div class="pk-big-text small">${esc(CLUBS[p.club]?.[0] || p.club)}</div>
+      <div class="pk-sub">${esc(LEAGUES[p.liga] || '')}</div>
+    </div>`, 'walkout', current.tier.id);
+  sfx.tick();
+  later(showSilhouette, 1700);
 }
 
 // 5. Silhouet van de speler terwijl de rating omhoog telt
@@ -253,7 +285,7 @@ function showCard() {
     </div>
     <div class="pk-player">
       <div class="pk-player-name">${esc(c.player.naam)}</div>
-      <div class="pk-player-bio">“${esc(c.player.bio)}”</div>
+      <div class="pk-player-bio">${esc(CLUBS[c.player.club]?.[0] || '')} · ${esc(NATIONS[c.player.nat] || c.player.nat)}</div>
     </div>
     <p class="pk-sentence"></p>
     <p class="pk-reward" hidden></p>
@@ -280,7 +312,7 @@ function showCard() {
 
   setTimeout(() => {
     sfx.reveal(c.tier.id);
-    if (WALKOUT.includes(c.tier.id)) confetti(fx(), c.tier.id === 'toty' ? 90 : 50);
+    if (WALKOUT.includes(c.tier.id)) confetti(fx(), c.tier.id === 'toty' || c.tier.id === 'icon' ? 90 : 50);
   }, 1100);
   typeText(el.querySelector('.pk-sentence'), sentenceFor(c), 1700);
 }
@@ -371,13 +403,15 @@ $('#pack').addEventListener('click', (e) => {
   // Klikken = verder, of een stap van de walkout overslaan.
   if (step === 'pack') ripPack();
   else if (step === 'flare') showVak();
-  else if (step === 'vak') showPosition();
-  else if (step === 'positie') showSilhouette();
+  else if (step === 'vak') (WALKOUT.includes(current.tier.id) ? showNation : showCard)();
+  else if (step === 'land') showPosition();
+  else if (step === 'positie') showClub();
+  else if (step === 'club') showSilhouette();
   else if (step === 'silhouet') showCard();
 });
 // Spatie of pijltje rechts = verder.
 $('#pack').addEventListener('keydown', (e) => {
-  if (![' ', 'ArrowRight'].includes(e.key) || !['pack', 'flare', 'vak', 'positie', 'silhouet'].includes(step)) return;
+  if (![' ', 'ArrowRight'].includes(e.key) || !['pack', 'flare', 'vak', 'land', 'positie', 'club', 'silhouet'].includes(step)) return;
   e.preventDefault();
   $('#pack-stage').click();
 });

@@ -59,6 +59,14 @@ function vakKort(vak) {
   ];
   return (map.find(([re]) => re.test(v)) || [null, vak ? vak.charAt(0).toUpperCase() + vak.slice(1) : ''])[1];
 }
+// Afkorting van het vak voor op het cijferlabel van de kaart.
+function vakAfk(vak) {
+  const v = String(vak || '').toLowerCase();
+  const map = [[/nederlands/, 'NED'], [/engels/, 'ENG'], [/duits/, 'DU'], [/frans/, 'FA'], [/spaans/, 'SP'], [/wiskunde/, 'WIS'], [/geschiedenis/, 'GS'],
+    [/aardrijkskunde/, 'AK'], [/biologie/, 'BIO'], [/natuurkunde/, 'NAT'], [/scheikunde/, 'SCH'], [/economie|bedrijfsec/, 'ECO'], [/lichamelijke|gym/, 'LO'],
+    [/culturele|ckv/, 'CKV'], [/maatschappij/, 'MAW'], [/levensbesch/, 'LEV'], [/informatica/, 'INF'], [/tekenen|beeldend/, 'BV'], [/muziek/, 'MU'], [/latijn/, 'LA'], [/grieks/, 'GR'], [/filosofie/, 'FI'], [/natuur/, 'NASK']];
+  return (map.find(([re]) => re.test(v)) || [null, v.replace(/[^a-z]/g, '').slice(0, 3).toUpperCase()])[1];
+}
 const CLUB_COLORS = ['#d62828', '#1d4ed8', '#059669', '#7c3aed', '#ea580c', '#0891b2', '#be185d', '#4d7c0f', '#b45309', '#334155', '#0f766e', '#9333ea'];
 const vakColor = (vak) => CLUB_COLORS[hashOf(vakKort(vak)) % CLUB_COLORS.length];
 
@@ -72,8 +80,8 @@ const GK_LABELS = ['DUI', 'HAN', 'TRA', 'REF', 'SNE', 'POS'];
 
 function cardOf(g) {
   const player = g.player || playerFor(g);
-  let ovr = player.base;
-  if (!g.transfer && g.cijfer >= 9) ovr = Math.min(99, ovr + 3); // TOTY-versie
+  // De rating op de kaart is je cijfer x 10: een 9 wordt 90, een 7,4 wordt 74. Gekochte kaarten houden hun echte rating.
+  const ovr = !g.transfer && g.cijfer != null ? Math.max(10, Math.min(99, Math.round(g.cijfer * 10))) : player.base;
   const h = hashOf(player.key + (g.transfer ? '' : g.id));
   const stats = POS_BIAS[player.pos].map((b, i) => Math.max(20, Math.min(99, ovr + 5, ovr + b + (((h >> (i * 4)) & 15) - 7))));
   return { g, player, ovr, tier: tierFor(g, ovr), stats };
@@ -82,94 +90,142 @@ function cardOf(g) {
 // ---------- Portret ----------
 // Getekend als SVG (zonder inline style: dat staat de beveiliging niet toe). Zo realistisch als het in SVG kan:
 // echte hoofdvorm met kaak, oren en nek, schaduw, amandelogen, een neus met neusvleugels en lippen.
-const SKINS = [['#f3cfb0', '#d2a07c', '#b98563'], ['#dcae84', '#b78256', '#9a6a44'], ['#c08a5c', '#9a6638', '#7d5029'],
-  ['#8f5a34', '#6c4022', '#553118'], ['#5f3b22', '#462915', '#331d0e'], ['#f7dcc4', '#e0b796', '#c89a78']];
-const HAIRS = ['#3b2414', '#22150c', '#8a4b22', '#c9a35a', '#111111', '#8f8f8f'];
-const EYES = ['#4a2e18', '#3a6a9a', '#466b3c'];
+const SKINS = [['#efc6a4', '#cf9d78', '#b07f5c'], ['#d9a77c', '#b67f53', '#946240'], ['#b98157', '#956139', '#774a29'],
+  ['#8a5532', '#6a3d20', '#512d15'], ['#5a3720', '#432814', '#2f1a0c'], ['#f6dac2', '#e2b693', '#c69874']].map((s) => s.map((c) => c.slice(0, 7)));
+const HAIRS = ['#4a2e1a', '#24170e', '#9a4a1f', '#d2ab62', '#121212', '#9a9a9a', '#ece0c2', '#7a5a36'];
+const EYES = ['#4a2e18', '#3a6a9a', '#4c6b3e'];
 let avatarSeq = 0;
 
 function lighten(hex, amt) {
-  const n = parseInt(hex.slice(1), 16);
+  const n = parseInt(hex.slice(1, 7), 16);
   const ch = [n >> 16, (n >> 8) & 255, n & 255].map((c) => Math.round(amt > 0 ? c + (255 - c) * amt : c * (1 + amt)));
   return '#' + ch.map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('');
 }
 
+// Hoofdvormen: rond, hoekig (brede kaak) en smal (spitse kin).
+const HEADS = [
+  'M60 21 C79 21 88 35 88 53 C88 64 86 72 81 79 C76 86 69 91 60 91 C51 91 44 86 39 79 C34 72 32 64 32 53 C32 35 41 21 60 21 Z',
+  'M60 21 C79 21 88 35 88 53 C88 65 88 73 84 80 C80 87 71 91 60 91 C49 91 40 87 36 80 C32 73 32 65 32 53 C32 35 41 21 60 21 Z',
+  'M60 21 C78 21 87 35 87 53 C87 63 84 71 78 79 C73 86 67 92 60 92 C53 92 47 86 42 79 C36 71 33 63 33 53 C33 35 42 21 60 21 Z',
+];
+const NOSES = [
+  ['M60 57 C59 62 57 66 56 68.5 C57.5 70.6 59 71 60 70.6 C61 71 62.5 70.6 64 68.5 C63 66 61 62 60 57 Z', 'M55.5 69 Q57.5 71.2 60 70.3 Q62.5 71.2 64.5 69'],
+  ['M60 57 C59 62 56.5 66 54 69 C56 71.6 58.5 71.6 60 70.8 C61.5 71.6 64 71.6 66 69 C63.5 66 61 62 60 57 Z', 'M53.8 69.2 Q56.8 72.4 60 70.8 Q63.2 72.4 66.2 69.2'],
+  ['M60 55 C59.6 61 58.2 66 57 69.5 C58 71.2 59 71.4 60 71 C61 71.4 62 71.2 63 69.5 C61.8 66 60.4 61 60 55 Z', 'M56.5 69.8 Q58.3 71.6 60 71 Q61.7 71.6 63.5 69.8'],
+];
+
+// Portret als SVG: hoofdvorm, oren, nek, schaduw, ogen met iris en lichtpuntje, neus, lippen, wenkbrauwen, kapsel en baard.
+// Elke persoon heeft een eigen gezicht (breedte, kaak, neus, ogen, wenkbrauwen, lippen) en een eigen kapsel.
 function avatarSVG(p, shirt, mood, nummer) {
   const id = `av${++avatarSeq}`;
+  const f = p.face || { w: 0, jaw: 0, nose: 0, brow: 1, eye: 1, lip: 1 };
   const [skin, shade, deep] = SKINS[p.skin] || SKINS[0];
   const hair = HAIRS[p.hc] || HAIRS[0];
+  const top = p.bleach ? HAIRS[6] : hair;
   const eye = EYES[p.eyes] || EYES[0];
   const accent = p.kit?.[1] || '#ffffff';
   const silhouette = shirt === '#000';
-  const head = 'M60 22 C79 22 88 36 88 54 C88 64 86 72 81 79 C76 86 69 91 60 91 C51 91 44 86 39 79 C34 72 32 64 32 54 C32 36 41 22 60 22 Z';
-  const body = 'M8 120 C10 103 24 96 44 92 L52 90 L60 99 L68 90 L76 92 C96 96 110 103 112 120 Z';
+  const man = p.man !== false;
+  const head = HEADS[man ? f.jaw : 2];
+  const body = man ? 'M6 120 C8 102 23 95 43 91 L52 89 L60 98 L68 89 L77 91 C97 95 112 102 114 120 Z'
+    : 'M14 120 C16 104 28 97 45 93 L53 91 L60 99 L67 91 L75 93 C92 97 104 104 106 120 Z';
+  const smile = mood === 'blij' ? 1 : mood === 'sip' ? -1 : 0;
+  const ey = 56.6, ex = 12 + (f.eye - 1) * 0.8, er = 2.15 + f.eye * 0.15;
+  const bw = man ? 2.3 + f.brow * 0.55 : 1.6;
+  const lip = f.lip * 0.5;
+  const H = (d, extra = '') => `<path d="${d}" fill="${hair}" ${extra}/>`;
+  const T = (d, extra = '') => `<path d="${d}" fill="${top}" ${extra}/>`;
+  const cap = 'M32 53 C30 30 44 19 60 19 C76 19 90 30 88 53 C85 42 79 36 68 35 C58 37 47 37 39 40 C35 43 33 47 32 53 Z';
+  const fadeSides = `<path d="M32 56 C31 47 33 41 37 38 L37 60 Z M88 56 C89 47 87 41 83 38 L83 60 Z" fill="${hair}" opacity=".45"/>`;
+  const curls = (r, ys) => ys.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('');
 
   const back = {
-    lang: `<path d="M30 56 C26 26 44 13 60 13 C76 13 94 26 90 56 L93 104 C86 108 80 104 80 104 L80 62 C78 46 70 38 60 38 C50 38 42 46 40 62 L40 104 C40 104 34 108 27 104 Z" fill="${hair}"/>`,
-    staart: `<path d="M84 42 C100 50 102 76 92 94 C90 82 88 68 80 58 Z" fill="${hair}"/>`,
-    knot: `<ellipse cx="60" cy="14" rx="10" ry="8.5" fill="${hair}"/>`,
-    knotm: `<ellipse cx="60" cy="16" rx="8.5" ry="7" fill="${hair}"/>`,
-    medium: `<path d="M30 60 C26 28 44 16 60 16 C76 16 94 28 90 60 L89 78 C85 80 83 77 83 77 L82 58 C79 43 72 36 60 36 C48 36 41 43 38 58 L37 77 C37 77 35 80 31 78 Z" fill="${hair}"/>`,
-    dreads: `<g fill="${hair}"><rect x="30" y="44" width="6" height="34" rx="3"/><rect x="37" y="48" width="6" height="30" rx="3"/><rect x="77" y="48" width="6" height="30" rx="3"/><rect x="84" y="44" width="6" height="34" rx="3"/></g>`,
-    krullang: `<g fill="${hair}"><circle cx="32" cy="56" r="9"/><circle cx="30" cy="70" r="8"/><circle cx="88" cy="56" r="9"/><circle cx="90" cy="70" r="8"/></g>`,
+    lang: H('M29 56 C25 25 44 12 60 12 C76 12 95 25 91 56 L94 106 C87 110 80 106 80 106 L80 62 C78 46 70 38 60 38 C50 38 42 46 40 62 L40 106 C40 106 33 110 26 106 Z'),
+    staart: H('M84 40 C101 48 103 78 92 98 C90 84 88 68 80 57 Z'),
+    knot: H('M60 13 m-10 0 a10 8.5 0 1 0 20 0 a10 8.5 0 1 0 -20 0'),
+    knotm: H('M60 13 m-8.5 0 a8.5 7 0 1 0 17 0 a8.5 7 0 1 0 -17 0'),
+    medium: H('M30 60 C26 27 44 15 60 15 C76 15 94 27 90 60 L89 80 C85 82 83 79 83 79 L82 58 C79 43 72 36 60 36 C48 36 41 43 38 58 L37 79 C37 79 35 82 31 80 Z'),
+    dreads: `<g fill="${hair}"><rect x="29" y="42" width="6" height="40" rx="3"/><rect x="36" y="46" width="6" height="36" rx="3"/><rect x="78" y="46" width="6" height="36" rx="3"/><rect x="85" y="42" width="6" height="40" rx="3"/></g>`,
+    krullang: `<g fill="${hair}">${curls(9, [[31, 56], [29, 70], [31, 83], [89, 56], [91, 70], [89, 83]])}</g>`,
+    mullet: H('M33 58 C31 72 32 86 36 95 L45 92 L41 62 Z M87 58 C89 72 88 86 84 95 L75 92 L79 62 Z'),
+    afro: `<circle cx="60" cy="42" r="33" fill="${hair}"/>`,
   };
-  const top = 'M32 54 C30 31 44 20 60 20 C76 20 90 31 88 54 C85 43 79 37 68 36 C58 38 47 38 39 41 C35 44 33 48 32 54 Z';
   const front = {
-    kaal: `<path d="M46 29 C52 25 62 25 69 28" stroke="#fff" stroke-opacity=".28" stroke-width="3" fill="none" stroke-linecap="round"/>`,
-    kort: `<path d="${top}" fill="${hair}"/>`,
-    fade: `<path d="M35 49 C35 30 47 22 60 22 C73 22 85 30 85 49 C82 40 75 35 60 35 C46 35 38 40 35 49 Z" fill="${hair}"/><path d="M32 55 C32 47 34 43 36 41 L36 57 Z M88 55 C88 47 86 43 84 41 L84 57 Z" fill="${hair}" opacity=".4"/>`,
-    buzz: `<path d="M33 51 C32 32 45 24 60 24 C75 24 88 32 87 51 C83 41 75 36 60 36 C45 36 37 41 33 51 Z" fill="${hair}" opacity=".75"/>`,
-    kuif: `<path d="${top}" fill="${hair}"/><path d="M40 38 C42 17 66 9 84 23 C74 23 64 28 58 37 Z" fill="${hair}"/>`,
-    gel: `<path d="M33 53 C31 30 45 21 61 21 C77 21 90 31 87 53 C85 41 79 34 71 32 C63 30 54 31 46 33 C39 36 35 44 33 53 Z" fill="${hair}"/><path d="M45 27 C55 23 68 23 80 29" stroke="#fff" stroke-opacity=".16" stroke-width="1.2" fill="none"/>`,
-    krul: `<g fill="${hair}"><circle cx="37" cy="40" r="7.5"/><circle cx="45" cy="30" r="8.5"/><circle cx="55" cy="25" r="8.5"/><circle cx="66" cy="25" r="8.5"/><circle cx="77" cy="30" r="8.5"/><circle cx="84" cy="40" r="7.5"/><circle cx="60" cy="31" r="7.5"/></g>`,
-    afro: `<circle cx="60" cy="40" r="30" fill="${hair}"/>`,
-    lang: `<path d="${top}" fill="${hair}"/>`, staart: `<path d="${top}" fill="${hair}"/>`, knot: `<path d="${top}" fill="${hair}"/>`,
-    knotm: `<path d="M33 53 C31 30 45 21 61 21 C77 21 90 31 87 53 C84 40 76 33 60 33 C44 33 36 40 33 53 Z" fill="${hair}"/>`,
-    dreads: `<path d="${top}" fill="${hair}"/><g stroke="${deep}" stroke-opacity=".5" stroke-width="1.3"><path d="M45 24 L43 40"/><path d="M55 21 L53 37"/><path d="M66 21 L67 37"/><path d="M76 25 L79 40"/></g>`,
-    medium: `<path d="M31 58 C29 30 44 19 61 19 C79 19 92 30 89 58 C85 44 78 36 64 34 C54 40 43 42 35 46 C33 50 32 54 31 58 Z" fill="${hair}"/>`,
-    krullang: `<g fill="${hair}"><circle cx="36" cy="42" r="8.5"/><circle cx="43" cy="30" r="9.5"/><circle cx="54" cy="24" r="9.5"/><circle cx="67" cy="24" r="9.5"/><circle cx="78" cy="30" r="9.5"/><circle cx="85" cy="42" r="8.5"/></g>`,
+    kaal: '<path d="M45 28 C52 24 63 24 70 27" stroke="#fff" stroke-opacity=".3" stroke-width="3.2" fill="none" stroke-linecap="round"/>',
+    kort: H(cap),
+    zij: H('M32 55 C30 30 44 19 61 19 C78 19 91 30 88 55 C86 43 80 37 72 35 C62 33 52 36 44 38 C38 40 34 46 32 55 Z') + H('M44 38 C49 26 66 21 85 30 C76 31 66 33 55 38 Z') + `<path d="M46 22 Q45 29 44 37" stroke="${lighten(hair, -.4)}" stroke-opacity=".5" stroke-width="1" fill="none"/>`,
+    fade: T('M35 48 C35 29 47 21 60 21 C73 21 85 29 85 48 C82 39 75 34 60 34 C46 34 38 39 35 48 Z') + fadeSides,
+    buzz: H('M33 50 C32 31 45 23 60 23 C75 23 88 31 87 50 C83 40 75 35 60 35 C45 35 37 40 33 50 Z', 'opacity=".72"'),
+    kuif: H(cap) + T('M40 37 C42 15 67 7 85 22 C75 22 64 27 58 36 Z'),
+    gel: H('M33 52 C31 29 45 20 61 20 C77 20 90 30 87 52 C85 40 79 33 71 31 C63 29 54 30 46 32 C39 35 35 43 33 52 Z') + '<path d="M45 26 C55 22 68 22 80 28 M47 29 C56 26 67 26 78 31" stroke="#fff" stroke-opacity=".18" stroke-width="1.1" fill="none"/>',
+    krul: `<g fill="${top}">${curls(8, [[37, 40], [45, 29], [55, 24], [66, 24], [76, 29], [84, 40], [60, 31], [49, 35], [71, 35]])}</g>`,
+    krulkort: H('M33 49 C32 30 45 22 60 22 C75 22 88 30 87 49 C83 40 75 35 60 35 C45 35 37 40 33 49 Z') + `<g fill="${top}">${curls(4.3, [[38, 37], [44, 30], [51, 26], [60, 24.5], [69, 26], [76, 30], [82, 37], [48, 33], [56, 30], [64, 30], [72, 33]])}</g>` + fadeSides,
+    afro: `<circle cx="60" cy="38" r="28" fill="${hair}"/>`,
+    dreads: H(cap) + `<g stroke="${lighten(hair, .25)}" stroke-opacity=".5" stroke-width="1.3"><path d="M45 24 L43 40"/><path d="M55 21 L53 37"/><path d="M66 21 L67 37"/><path d="M76 25 L79 40"/></g>`,
+    cornrows: H('M33 51 C32 31 45 22 60 22 C75 22 88 31 87 51 C83 41 75 35 60 35 C45 35 37 41 33 51 Z') + '<g stroke="#fff" stroke-opacity=".16" stroke-width="1.4" fill="none"><path d="M45 25 Q42 36 37 46"/><path d="M53 22.5 Q51 30 49 36"/><path d="M60 22 L60 35"/><path d="M67 22.5 Q69 30 71 36"/><path d="M75 25 Q78 36 83 46"/></g>',
+    mohawk: H('M33 50 C32 31 45 23 60 23 C75 23 88 31 87 50 C83 40 75 35 60 35 C45 35 37 40 33 50 Z', 'opacity=".35"') + T('M51 38 C49 20 54 10 60 9 C66 10 71 20 69 38 C66 35 54 35 51 38 Z'),
+    stekel: H(cap) + T('M38 40 L41 24 L46 32 L50 17 L55 30 L60 15 L65 29 L70 17 L74 31 L79 22 L82 38 C74 34 62 33 52 35 C46 36 41 38 38 40 Z'),
+    mullet: H(cap),
+    lang: H(cap), staart: H('M32 53 C30 30 44 19 60 19 C76 19 90 30 88 53 C84 41 76 33 60 33 C44 33 36 41 32 53 Z'), knot: H('M32 53 C30 30 44 19 60 19 C76 19 90 30 88 53 C84 41 76 33 60 33 C44 33 36 41 32 53 Z'),
+    knotm: H('M33 53 C31 30 45 21 61 21 C77 21 90 31 87 53 C84 40 76 33 60 33 C44 33 36 40 33 53 Z') + '<path d="M44 28 C52 24 68 24 76 28" stroke="#fff" stroke-opacity=".14" stroke-width="1.2" fill="none"/>',
+    medium: H('M31 58 C29 29 44 18 61 18 C79 18 92 29 89 58 C85 44 78 36 64 34 C54 40 43 42 35 46 C33 50 32 54 31 58 Z'),
+    krullang: `<g fill="${hair}">${curls(9.5, [[36, 42], [43, 30], [54, 23], [67, 23], [78, 30], [85, 42], [60, 30]])}</g>`,
   };
-  const beard = {
-    stoppels: `<path d="M36 63 C38 80 48 90 60 90 C72 90 82 80 84 63 C80 72 73 76 60 76 C47 76 40 72 36 63 Z" fill="${hair}" opacity=".3"/>`,
-    baard: `<path d="M35 61 C36 82 47 93 60 93 C73 93 84 82 85 61 C82 71 76 74 68 72 C64 71 56 71 52 72 C44 74 38 71 35 61 Z" fill="${hair}"/>`,
-    snor: `<path d="M48 73 C52 70 57 70 60 71.5 C63 70 68 70 72 73 C67 72.5 64 73.5 60 74 C56 73.5 53 72.5 48 73 Z" fill="${hair}"/>`,
-  }[p.beard] || '';
-  const smile = mood === 'blij' ? 1 : mood === 'sip' ? -1 : 0;
+  const snor = H('M49 73.6 C53 71 57 71 60 72.4 C63 71 67 71 71 73.6 C67 73.2 64 74.2 60 74.6 C56 74.2 53 73.2 49 73.6 Z');
+  const beards = {
+    stoppels: H('M36 63 C38 80 48 90 60 90 C72 90 82 80 84 63 C80 72 73 76 60 76 C47 76 40 72 36 63 Z', 'opacity=".28"') + H('M50 73 C55 71.5 65 71.5 70 73 L69 75 C64 74 56 74 51 75 Z', 'opacity=".3"'),
+    kort: H('M35 61 C36 82 47 93 60 93 C73 93 84 82 85 61 C82 71 76 74 68 72 C64 71 56 71 52 72 C44 74 38 71 35 61 Z', 'opacity=".7"'),
+    baard: H('M35 61 C36 82 47 93 60 93 C73 93 84 82 85 61 C82 71 76 74 68 72 C64 71 56 71 52 72 C44 74 38 71 35 61 Z'),
+    vol: H('M33 57 C33 84 45 99 60 99 C75 99 87 84 87 57 C84 70 77 75 68 73 C64 72 56 72 52 73 C43 75 36 70 33 57 Z'),
+    sik: H('M52 79.5 C52 88 56 92.5 60 92.5 C64 92.5 68 88 68 79.5 C65 82.5 55 82.5 52 79.5 Z'),
+    snor: '',
+  };
+  const beard = man ? (beards[p.beard] ?? '') : '';
+  const withSnor = man && ['snor', 'baard', 'vol', 'kort', 'sik'].includes(p.beard);
+  const sx = 1 + (f.w || 0);
 
   const svg = `<svg viewBox="0 0 120 120" class="pc-avatar" aria-hidden="true">
     <defs>
-      <radialGradient id="${id}f" cx="42%" cy="36%" r="70%"><stop offset="0" stop-color="${lighten(skin, .08)}"/><stop offset=".6" stop-color="${skin}"/><stop offset="1" stop-color="${shade}"/></radialGradient>
-      <linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></linearGradient>
-      <linearGradient id="${id}h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lighten(hair, .28)}"/><stop offset=".5" stop-color="${hair}"/><stop offset="1" stop-color="${lighten(hair, -.3)}"/></linearGradient>
+      <radialGradient id="${id}f" cx="42%" cy="34%" r="72%"><stop offset="0" stop-color="${lighten(skin, .1)}"/><stop offset=".55" stop-color="${skin}"/><stop offset="1" stop-color="${shade}"/></radialGradient>
+      <linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>
+      <linearGradient id="${id}h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lighten(hair, .3)}"/><stop offset=".5" stop-color="${hair}"/><stop offset="1" stop-color="${lighten(hair, -.35)}"/></linearGradient>
       <linearGradient id="${id}n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${deep}"/><stop offset="1" stop-color="${shade}"/></linearGradient>
     </defs>
-    ${back[p.hair] || ''}
+    <g transform="translate(60 0) scale(${sx.toFixed(3)} 1) translate(-60 0)">${back[p.hair] || ''}</g>
     <path d="${body}" fill="${shirt}"/>
-    ${silhouette ? '' : `<path d="M8 120 C9 112 12 107 16 104 L21 106 C17 110 15 115 14 120 Z M112 120 C111 112 108 107 104 104 L99 106 C103 110 105 115 106 120 Z" fill="${accent}" opacity=".9"/>
-    <path d="M45 92 L60 106 L75 92" stroke="${accent}" stroke-width="3" fill="none"/>
+    ${silhouette ? '' : `<path d="M6 120 C7 112 11 106 15 103 L20 105 C16 109 14 115 13 120 Z M114 120 C113 112 109 106 105 103 L100 105 C104 109 106 115 107 120 Z" fill="${accent}" opacity=".9"/>
+    <path d="M45 91 L60 105 L75 91" stroke="${accent}" stroke-width="3" fill="none"/>
     ${nummer ? `<text x="88" y="114" font-size="10" font-weight="800" fill="${accent}" fill-opacity=".9" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">${nummer}</text>` : ''}`}
     <path d="${body}" fill="url(#${id}s)"/>
-    <path d="M50 78 L50 95 Q60 102 70 95 L70 78 Z" fill="url(#${id}n)"/>
+    <path d="M50 77 L50 95 Q60 102 70 95 L70 77 Z" fill="url(#${id}n)"/>
+    <path d="M50 88 Q60 94 70 88" stroke="${deep}" stroke-opacity=".35" stroke-width="1.2" fill="none"/>
+    <g transform="translate(60 0) scale(${sx.toFixed(3)} 1) translate(-60 0)">
     <ellipse cx="33" cy="58" rx="4.6" ry="7.5" fill="${shade}"/><ellipse cx="87" cy="58" rx="4.6" ry="7.5" fill="${shade}"/>
     <path d="M32 55 Q34 58 33 62 M88 55 Q86 58 87 62" stroke="${deep}" stroke-opacity=".5" stroke-width="1" fill="none"/>
     <path d="${head}" fill="url(#${id}f)"/>
-    <path d="M38 74 C44 86 52 91 60 91 C68 91 76 86 82 74 C78 84 70 88 60 88 C50 88 42 84 38 74 Z" fill="${deep}" opacity=".35"/>
-    <path d="M36 60 C37 70 40 76 44 80 M84 60 C83 70 80 76 76 80" stroke="${deep}" stroke-opacity=".18" stroke-width="3" fill="none"/>
-    <g fill="#fbfaf7"><path d="M42.5 57 Q48 52.5 53.5 57 Q48 60.5 42.5 57 Z"/><path d="M66.5 57 Q72 52.5 77.5 57 Q72 60.5 66.5 57 Z"/></g>
-    <g fill="${eye}"><circle cx="48" cy="56.8" r="2.3"/><circle cx="72" cy="56.8" r="2.3"/></g>
-    <g fill="#0b0b0b"><circle cx="48" cy="56.8" r="1.05"/><circle cx="72" cy="56.8" r="1.05"/></g>
-    <g fill="#fff" opacity=".85"><circle cx="48.8" cy="56" r=".55"/><circle cx="72.8" cy="56" r=".55"/></g>
-    <path d="M42 56.6 Q48 51.6 54 56.4 M66 56.4 Q72 51.6 78 56.6" stroke="${deep}" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-    <path d="M43 59 Q48 61 53 59 M67 59 Q72 61 77 59" stroke="${shade}" stroke-opacity=".6" stroke-width=".8" fill="none"/>
-    <g stroke="${p.hair === 'kaal' ? deep : hair}" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".92">
-      <path d="M41 ${50 - (smile < 0 ? 0 : 0)} Q47 ${46.5 + (smile < 0 ? 2 : 0)} 54 ${49 + (smile < 0 ? 1.5 : 0)}"/><path d="M66 ${49 + (smile < 0 ? 1.5 : 0)} Q73 ${46.5 + (smile < 0 ? 2 : 0)} 79 50"/></g>
-    <path d="M60 58 C59 63 57 67 56 69 C57.5 71 59 71.5 60 71 C61 71.5 62.5 71 64 69 C63 67 61 63 60 58 Z" fill="${shade}" opacity=".45"/>
-    <path d="M55.5 69.5 Q57.5 71.5 60 70.6 Q62.5 71.5 64.5 69.5" stroke="${deep}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
-    ${p.beard === 'snor' ? '' : beard}
-    <path d="M52 78.5 Q56 ${77 + smile * -1.2} 60 ${77.6 + smile * -0.4} Q64 ${77 + smile * -1.2} 68 78.5" stroke="${deep}" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-    <path d="M53 79 Q60 ${82.5 + smile} 67 79 Q60 ${80.4 + smile * .5} 53 79 Z" fill="${lighten(shade, -.05)}" opacity=".85"/>
-    ${p.beard === 'snor' ? beard : ''}
+    <path d="M38 74 C44 86 52 91 60 91 C68 91 76 86 82 74 C78 84 70 88 60 88 C50 88 42 84 38 74 Z" fill="${deep}" opacity=".32"/>
+    <path d="M36 60 C37 70 40 76 44 80 M84 60 C83 70 80 76 76 80" stroke="${deep}" stroke-opacity=".16" stroke-width="3" fill="none"/>
+    <ellipse cx="${60 - ex - 4}" cy="65" rx="5" ry="3" fill="#d9776a" opacity="${man ? .07 : .16}"/><ellipse cx="${60 + ex + 4}" cy="65" rx="5" ry="3" fill="#d9776a" opacity="${man ? .07 : .16}"/>
+    <path d="M${60 - ex - 6} 59.5 Q${60 - ex} 62 ${60 - ex + 6} 59.5 M${60 + ex - 6} 59.5 Q${60 + ex} 62 ${60 + ex + 6} 59.5" stroke="${deep}" stroke-opacity=".28" stroke-width="1" fill="none"/>
+    <g fill="#fbfaf7"><path d="M${60 - ex - 5.6} ${ey} Q${60 - ex} ${ey - 4.6} ${60 - ex + 5.6} ${ey} Q${60 - ex} ${ey + 3.6} ${60 - ex - 5.6} ${ey} Z"/><path d="M${60 + ex - 5.6} ${ey} Q${60 + ex} ${ey - 4.6} ${60 + ex + 5.6} ${ey} Q${60 + ex} ${ey + 3.6} ${60 + ex - 5.6} ${ey} Z"/></g>
+    <g fill="${eye}"><circle cx="${60 - ex}" cy="${ey + .2}" r="${er}"/><circle cx="${60 + ex}" cy="${ey + .2}" r="${er}"/></g>
+    <g fill="#0b0b0b"><circle cx="${60 - ex}" cy="${ey + .2}" r="1.05"/><circle cx="${60 + ex}" cy="${ey + .2}" r="1.05"/></g>
+    <g fill="#fff" opacity=".85"><circle cx="${60 - ex + .8}" cy="${ey - .6}" r=".6"/><circle cx="${60 + ex + .8}" cy="${ey - .6}" r=".6"/></g>
+    <path d="M${60 - ex - 6} ${ey} Q${60 - ex} ${ey - 5.2} ${60 - ex + 6} ${ey - .2} M${60 + ex - 6} ${ey - .2} Q${60 + ex} ${ey - 5.2} ${60 + ex + 6} ${ey}" stroke="${deep}" stroke-width="${man ? 1.2 : 1.7}" fill="none" stroke-linecap="round"/>
+    ${man ? '' : `<path d="M${60 - ex - 6} ${ey - .3} l-1.6 -1.4 M${60 + ex + 6} ${ey - .3} l1.6 -1.4" stroke="#1a1a1a" stroke-width="1" stroke-linecap="round"/>`}
+    <g stroke="${p.hair === 'kaal' ? deep : hair}" stroke-width="${bw}" fill="none" stroke-linecap="round" opacity=".92">
+      <path d="M${60 - ex - 7} ${50.5 + (f.brow === 2 ? .8 : 0)} Q${60 - ex - 1} ${46.6 + (smile < 0 ? 2 : 0)} ${60 - ex + 6} ${49 + (smile < 0 ? 1.5 : 0)}"/><path d="M${60 + ex - 6} ${49 + (smile < 0 ? 1.5 : 0)} Q${60 + ex + 1} ${46.6 + (smile < 0 ? 2 : 0)} ${60 + ex + 7} ${50.5 + (f.brow === 2 ? .8 : 0)}"/></g>
+    <path d="${NOSES[f.nose][0]}" fill="${shade}" opacity=".42"/>
+    <path d="M59 58 C58.6 62 58 65 57.5 67" stroke="#fff" stroke-opacity=".18" stroke-width="1.2" fill="none"/>
+    <path d="${NOSES[f.nose][1]}" stroke="${deep}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    ${beard}
+    <path d="M${52 - lip} 78.5 Q56 ${77 - lip * .6 + smile * -1.2} 60 ${77.6 - lip * .4 + smile * -0.4} Q64 ${77 - lip * .6 + smile * -1.2} ${68 + lip} 78.5" stroke="${deep}" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M${53 - lip} 79 Q60 ${82.5 + lip + smile} ${67 + lip} 79 Q60 ${80.4 + smile * .5} ${53 - lip} 79 Z" fill="${man ? lighten(shade, -.05) : '#b4545a'}" opacity=".85"/>
+    ${man ? '' : `<path d="M${53 - lip} 78.6 Q56 76.6 60 77.6 Q64 76.6 ${67 + lip} 78.6 Q60 79.4 ${53 - lip} 78.6 Z" fill="#b4545a" opacity=".7"/>`}
+    ${withSnor ? snor : ''}
     ${front[p.hair] || ''}
+    ${p.band ? `<path d="M31 45 C40 37 80 37 89 45 L89 50 C80 42 40 42 31 50 Z" fill="${accent === '#ffffff' ? '#f4f4f4' : accent}"/>` : ''}
+    </g>
   </svg>`;
   return svg.split(`fill="${hair}"`).join(`fill="url(#${id}h)"`);
 }
@@ -184,7 +240,10 @@ function cardHTML(c, size = 'md') {
   const labels = p.pos === 'GK' ? GK_LABELS : STAT_LABELS;
   const room = size === 'sm' ? 9.6 : 12.4;
   const nameSize = Math.max(0.6, Math.min(1.08, room / (p.naam.length * 0.62))).toFixed(2);
-  const foot = g.transfer ? 'Transfermarkt' : `${esc(vakKort(g.vak))} · ${esc(g.resultaat || '')}`;
+  const cijfer = g.transfer ? '' : String(g.resultaat || (g.cijfer != null ? String(g.cijfer).replace('.', ',') : ''));
+  const gcls = g.cijfer == null ? '' : g.cijfer >= 8 ? 'top' : g.cijfer >= 5.5 ? 'ok' : 'bad';
+  const foot = g.transfer ? (g.vak === '' ? '' : '<span class="fc-vak">Transfermarkt</span>')
+    : `<span class="fc-vak">${esc(vakKort(g.vak))}</span>`;
   return `<div class="fc-card fc-${size}" data-tier="${c.tier.id}">
     <div class="fc-bg"></div><div class="fc-shine"></div>
     <div class="fc-inner">
@@ -196,7 +255,8 @@ function cardHTML(c, size = 'md') {
       <div class="fc-photo">${avatarSVG(p, p.kit[0], MOODS[c.tier.id], '')}</div>
       <div class="fc-name"><span data-size="${nameSize}">${esc(p.naam)}</span></div>
       <div class="fc-stats">${c.stats.map((v, i) => `<div><b>${v}</b><span>${labels[i]}</span></div>`).join('')}</div>
-      <div class="fc-foot">${foot}</div>
+      ${foot ? `<div class="fc-foot">${foot}</div>` : ''}
+
     </div>
   </div>`;
 }
@@ -288,6 +348,23 @@ window.utTeamState = () => {
   return { cards, bench, chem, owned, ovr: teamRating(Object.values(cards)), chemTotal: Object.values(chem).reduce((a, b) => a + b, 0) };
 };
 
+// Chemielijnen zoals in FC: tussen spelers die naast elkaar staan. Groen = sterke link, oranje = zwak, rood = geen.
+const LINKS = [['LW', 'ST'], ['ST', 'RW'], ['LW', 'CM1'], ['ST', 'CM2'], ['RW', 'CM3'], ['CM1', 'CM2'], ['CM2', 'CM3'], ['LB', 'CM1'], ['CB1', 'CM1'],
+  ['CB2', 'CM3'], ['RB', 'CM3'], ['LB', 'CB1'], ['CB1', 'CB2'], ['CB2', 'RB'], ['CB1', 'GK'], ['CB2', 'GK']];
+function linkStrength(a, b) {
+  if (!a || !b) return 'n';
+  const p = a.player, q = b.player;
+  const icon = p.club === 'ICON' || q.club === 'ICON';
+  const pts = (!icon && p.club === q.club ? 2 : 0) + (p.nat === q.nat ? 1 : 0) + (icon || p.liga === q.liga ? 1 : 0);
+  return pts >= 2 ? 2 : pts;
+}
+function drawLinks(cards) {
+  const svg = document.getElementById('ut-links');
+  if (!svg) return;
+  const at = Object.fromEntries(SLOTS.map((s) => [s.id, s]));
+  svg.innerHTML = LINKS.map(([a, b]) => `<line class="lk-${linkStrength(cards[a], cards[b])}" x1="${at[a].x}" y1="${at[a].y}" x2="${at[b].x}" y2="${at[b].y}"/>`).join('');
+}
+
 function renderTeam() {
   loadTeam();
   const owned = ownedCards();
@@ -310,6 +387,7 @@ function renderTeam() {
     </div>`;
   }).join('');
   document.querySelectorAll('#ut-pitch-slots .ut-slot').forEach((el) => { el.style.left = el.dataset.x + '%'; el.style.top = el.dataset.y + '%'; });
+  drawLinks(cards);
 
   $('#ut-bench').innerHTML = BENCH.map((b) => {
     const c = byId.get(team[b]);

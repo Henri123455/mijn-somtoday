@@ -30,6 +30,9 @@ const CLUBS = {
   NAS: ['Al Nassr', 'KSA', '#fbe122', '#1e3a8a'], HIL: ['Al Hilal', 'KSA', '#0047ab', '#ffffff'], ITT: ['Al Ittihad', 'KSA', '#f6d10a', '#000000'],
   MIA: ['Inter Miami', 'USA', '#f7b5cd', '#231f20'], LAG: ['LA Galaxy', 'USA', '#00245d', '#ffd200'],
   ICON: ['Iconen', 'ICN', '#e9e4d6', '#b08d3c'], BN: ['Bekende Nederlanders', 'BNL', '#f36c21', '#1e3a8a'],
+  // BN'ers spelen voor hun social: daar zijn ze bekend van.
+  TTK: ['TikTok', 'BNL', '#111111', '#25f4ee'], YTB: ['YouTube', 'BNL', '#ff0033', '#ffffff'], IG: ['Instagram', 'BNL', '#d62976', '#feda75'],
+  SPF: ['Spotify', 'BNL', '#1db954', '#121212'], X: ['X', 'BNL', '#000000', '#ffffff'], TWT: ['Twitch', 'BNL', '#9146ff', '#ffffff'],
 };
 const LEAGUES = { ENG: 'Premier League', ESP: 'LALIGA', GER: 'Bundesliga', FRA: 'Ligue 1', ITA: 'Serie A', NED: 'Eredivisie', POR: 'Liga Portugal', TUR: 'Süper Lig', KSA: 'Saudi Pro League', USA: 'MLS', BRA: 'Brasileirão', ICN: 'Iconen', BNL: "BN'ers" };
 const NATIONS = {
@@ -131,46 +134,122 @@ const PLAYER_DB = [
   'Ronaldo Nazário|ST|95|BRA|ICON|1,kaal,4,', 'Paolo Maldini|CB|93|ITA|ICON|0,medium,1,', 'David Beckham|RM|88|ENG|ICON|5,kort,3,',
   'Kaká|CAM|91|BRA|ICON|0,kort,1,', 'Andrea Pirlo|CM|91|ITA|ICON|0,lang,1,baard', 'Wayne Rooney|ST|89|ENG|ICON|5,kort,1,',
   // ---- BN'ers (lage cijfers): altijd lager dan de voetballers ----
-  'André Hazes|ST|58|NED|BN|0,kort,1,baard', 'Jan Smit|CM|55|NED|BN|5,kort,3,', 'Gordon|CB|44|NED|BN|0,kort,1,',
-  'Gerard Joling|RW|46|NED|BN|0,kuif,5,', 'Linda de Mol|LW|47|NED|BN|5,lang,3,', 'Snelle|ST|57|NED|BN|5,kort,2,',
-  'Davina Michelle|CM|52|NED|BN|0,lang,1,', 'Duncan Laurence|CAM|48|NED|BN|5,kort,1,', 'Emma Heesters|RW|50|NED|BN|5,lang,1,',
-  'Ronnie Flex|ST|53|NED|BN|3,kort,4,', 'Kwebbelkop|ST|49|NED|BN|0,kort,3,', 'Monica Geuze|LB|45|NED|BN|5,lang,3,',
-  'Bram Krikke|CM|51|NED|BN|0,kuif,1,baard', 'Joost Klein|LW|54|NED|BN|0,medium,3,snor', 'NikkieTutorials|CAM|43|NED|BN|5,lang,3,',
-  'Kalvijn|RW|59|NED|BN|0,krul,0,stoppels', 'Dylan Haegens|LW|52|NED|BN|0,kuif,0,baard', 'Milan Knol|RB|47|NED|BN|5,kort,3,',
-  'Enzo Knol|ST|50|NED|BN|5,kuif,3,', 'Martin Garrix|CAM|56|NED|BN|5,kort,1,', 'Tiësto|CM|53|NED|BN|0,kort,1,stoppels',
-  'Armin van Buuren|CB|49|NED|BN|5,kort,3,', 'Hardwell|RW|51|NED|BN|0,kort,0,baard', 'Max Verstappen|ST|64|NED|BN|5,kort,1,stoppels',
-  'Femke Bol|RB|63|NED|BN|5,staart,3,', 'Sifan Hassan|LW|63|NED|BN|3,knot,4,', 'Dafne Schippers|RW|61|NED|BN|5,staart,3,',
-  'Sven Kramer|LB|60|NED|BN|5,kort,3,', 'Ireen Wüst|CM|60|NED|BN|5,staart,1,', 'Mathieu van der Poel|RW|62|NED|BN|5,kort,1,',
-  'Jutta Leerdam|LW|58|NED|BN|5,lang,1,', 'Pieter van den Hoogenband|ST|57|NED|BN|5,kort,3,', 'Michael van Gerwen|ST|55|NED|BN|0,kaal,1,',
-  'Raymond van Barneveld|CB|50|NED|BN|0,kort,1,', 'Chantal Janzen|CM|46|NED|BN|5,lang,3,', 'Humberto Tan|RB|48|NED|BN|3,kort,4,stoppels',
-  'Johnny de Mol|ST|52|NED|BN|0,kort,1,baard', 'Frans Bauer|CB|42|NED|BN|0,kort,1,', 'Rob Kemps|CAM|47|NED|BN|0,kort,1,baard',
-  'Epke Zonderland|CAM|59|NED|BN|5,kort,1,', 'Kjeld Nuis|CB|58|NED|BN|5,kort,3,', 'Tom Dumoulin|CM|57|NED|BN|5,kort,1,',
+  'André Hazes|ST|58|NED|SPF|0,kort,1,baard', 'Jan Smit|CM|55|NED|SPF|5,kort,3,', 'Gordon|CB|44|NED|IG|0,kort,1,',
+  'Gerard Joling|RW|46|NED|IG|0,kuif,5,', 'Linda de Mol|LW|47|NED|IG|5,lang,3,', 'Snelle|ST|57|NED|SPF|5,kort,2,',
+  'Davina Michelle|CM|52|NED|YTB|0,lang,1,', 'Duncan Laurence|CAM|48|NED|SPF|5,kort,1,', 'Emma Heesters|RW|50|NED|YTB|5,lang,1,',
+  'Ronnie Flex|ST|53|NED|SPF|3,kort,4,', 'Kwebbelkop|ST|49|NED|YTB|0,kort,3,', 'Monica Geuze|LB|45|NED|TTK|5,lang,3,',
+  'Bram Krikke|CM|51|NED|IG|0,kuif,1,baard', 'Joost Klein|LW|54|NED|TTK|0,medium,3,snor', 'NikkieTutorials|CAM|43|NED|YTB|5,lang,3,',
+  'Kalvijn|RW|59|NED|TWT|0,krul,0,stoppels', 'Dylan Haegens|LW|52|NED|YTB|0,kuif,0,baard', 'Milan Knol|RB|47|NED|TWT|5,kort,3,',
+  'Enzo Knol|ST|50|NED|YTB|5,kuif,3,', 'Martin Garrix|CAM|56|NED|SPF|5,kort,1,', 'Tiësto|CM|53|NED|SPF|0,kort,1,stoppels',
+  'Armin van Buuren|CB|49|NED|SPF|5,kort,3,', 'Hardwell|RW|51|NED|SPF|0,kort,0,baard', 'Max Verstappen|ST|64|NED|IG|5,kort,1,stoppels',
+  'Femke Bol|RB|63|NED|IG|5,staart,3,', 'Sifan Hassan|LW|63|NED|IG|3,knot,4,', 'Dafne Schippers|RW|61|NED|IG|5,staart,3,',
+  'Sven Kramer|LB|60|NED|IG|5,kort,3,', 'Ireen Wüst|CM|60|NED|IG|5,staart,1,', 'Mathieu van der Poel|RW|62|NED|IG|5,kort,1,',
+  'Jutta Leerdam|LW|58|NED|TTK|5,lang,1,', 'Pieter van den Hoogenband|ST|57|NED|IG|5,kort,3,', 'Michael van Gerwen|ST|55|NED|IG|0,kaal,1,',
+  'Raymond van Barneveld|CB|50|NED|X|0,kort,1,', 'Chantal Janzen|CM|46|NED|IG|5,lang,3,', 'Humberto Tan|RB|48|NED|X|3,kort,4,stoppels',
+  'Johnny de Mol|ST|52|NED|IG|0,kort,1,baard', 'Frans Bauer|CB|42|NED|SPF|0,kort,1,', 'Rob Kemps|CAM|47|NED|TTK|0,kort,1,baard',
+  'Epke Zonderland|CAM|59|NED|IG|5,kort,1,', 'Kjeld Nuis|CB|58|NED|IG|5,kort,3,', 'Tom Dumoulin|CM|57|NED|X|5,kort,1,',
 ];
 
 // Een paar spelers krijgen hun echte shirt in plaats van dat van hun club (bijv. landenteam bij iconen).
 const KIT_OVERRIDE = { ICON: { NED: ['#f36c21', '#ffffff'], FRA: ['#1e3a8a', '#ffffff'], BRA: ['#f7d417', '#0b8a3e'], ITA: ['#1f5fbf', '#ffffff'], ENG: ['#f4f4f4', '#1e3a8a'] } };
 
+// Uiterlijk dat lijkt op de echte persoon: 'huid,kapsel,haarkleur,baard,extra'.
+// Kapsels: kort, zij (zijscheiding), kuif, gel, fade, buzz, kaal, krul, krulkort, afro, dreads, cornrows, mohawk, stekel,
+// medium, lang, krullang, mullet, knotm (mannenknotje), staart, knot. Haarkleur ook 6 platina, 7 donkerblond.
+// Baard: stoppels, kort, baard, vol, sik, snor. Extra: band (haarband), bleach (geblondeerde bovenkant), v (vrouw).
+const LOOKS = {
+  'Kylian Mbappé': '3,buzz,4,,', 'Erling Haaland': '5,knotm,3,,', 'Mohamed Salah': '2,afro,4,vol,', 'Rodri': '0,zij,1,stoppels,',
+  'Jude Bellingham': '2,fade,4,,', 'Virgil van Dijk': '3,krulkort,4,baard,', 'Vinícius Júnior': '3,krulkort,4,,', 'Ousmane Dembélé': '3,krulkort,4,sik,',
+  'Harry Kane': '5,zij,7,,', 'Kevin De Bruyne': '5,zij,2,stoppels,', 'Lamine Yamal': '2,krulkort,4,,', 'Raphinha': '1,knotm,4,kort,',
+  'Thibaut Courtois': '5,kort,0,stoppels,', 'Federico Valverde': '1,zij,4,kort,', 'Achraf Hakimi': '1,fade,4,stoppels,', 'Pedri': '0,medium,4,,',
+  'Alisson': '1,zij,1,vol,', 'Gianluigi Donnarumma': '0,fade,4,kort,', 'Bukayo Saka': '3,krulkort,4,,', 'Martin Ødegaard': '5,zij,7,,',
+  'Lautaro Martínez': '1,fade,4,kort,', 'Jamal Musiala': '2,krulkort,4,,', 'Florian Wirtz': '5,kuif,7,,', 'Declan Rice': '5,kort,0,,',
+  'Joshua Kimmich': '5,zij,7,,', 'Robert Lewandowski': '0,zij,1,,', 'William Saliba': '3,fade,4,,', 'Rúben Dias': '0,fade,4,kort,',
+  'Marquinhos': '1,fade,4,kort,', 'Antonio Rüdiger': '3,kaal,4,baard,', 'Bernardo Silva': '0,krul,4,kort,', 'Bruno Fernandes': '0,zij,4,stoppels,',
+  'Phil Foden': '5,buzz,3,,', 'Cristiano Ronaldo': '1,gel,4,,', 'Lionel Messi': '0,kort,0,baard,', 'Son Heung-min': '0,zij,4,,',
+  'Khvicha Kvaratskhelia': '5,krul,0,,', 'Victor Osimhen': '3,krulkort,6,,', 'Alexander Isak': '3,medium,4,stoppels,', 'Nicolò Barella': '0,fade,4,stoppels,',
+  'Alessandro Bastoni': '0,zij,1,,', 'Mike Maignan': '3,kaal,4,vol,', 'Marc-André ter Stegen': '5,zij,3,,', 'Jan Oblak': '0,kort,1,stoppels,',
+  'Antoine Griezmann': '5,kort,7,stoppels,', 'Cole Palmer': '5,krul,2,,', 'Vitinha': '0,kuif,4,,', 'Ederson': '1,kaal,4,vol,',
+  'Luka Modrić': '5,lang,3,,band', 'Kai Havertz': '5,kort,0,,', 'Gabriel Magalhães': '0,fade,4,baard,', 'Alexis Mac Allister': '5,krul,2,,',
+  'Dominik Szoboszlai': '5,fade,3,,', 'Trent Alexander-Arnold': '2,cornrows,4,,', 'Theo Hernández': '0,kuif,1,kort,', 'Alphonso Davies': '4,fade,4,,',
+  'João Neves': '0,krul,1,,', 'Nuno Mendes': '3,dreads,4,,', 'Michael Olise': '3,krulkort,4,,', 'Désiré Doué': '3,fade,4,,',
+  'Viktor Gyökeres': '0,medium,1,kort,', 'Julián Álvarez': '1,kort,1,,', 'Nico Williams': '3,fade,4,,bleach', 'Dani Olmo': '0,zij,1,,',
+  'Frenkie de Jong': '0,medium,7,stoppels,', 'Rafael Leão': '3,buzz,4,sik,', 'Kenan Yıldız': '0,krul,4,,', 'Dušan Vlahović': '0,zij,4,stoppels,',
+  'Paulo Dybala': '0,kort,1,stoppels,', 'Karim Benzema': '1,kaal,4,vol,', 'Neymar Jr': '1,fade,3,kort,bleach', 'Ivan Toney': '3,fade,4,baard,',
+  'Jeremie Frimpong': '3,krulkort,4,,', 'Granit Xhaka': '0,fade,4,vol,', 'Bruno Guimarães': '1,kort,4,baard,', 'Ollie Watkins': '3,fade,4,,',
+  'Emiliano Martínez': '0,kort,4,kort,', 'Morgan Rogers': '3,krulkort,4,,', 'Anthony Gordon': '5,stekel,7,,', 'Marcus Rashford': '3,cornrows,4,sik,',
+  'Jack Grealish': '5,gel,0,stoppels,band', 'Rasmus Højlund': '5,kort,3,,', 'Benjamin Šeško': '5,kort,7,,', 'Kaoru Mitoma': '0,zij,4,,',
+  'Takefusa Kubo': '0,kuif,4,,', 'Ademola Lookman': '3,dreads,4,,', 'Hakan Çalhanoğlu': '0,zij,4,kort,', 'Marcus Thuram': '3,cornrows,4,sik,',
+  'Bradley Barcola': '3,krulkort,4,,', 'Warren Zaïre-Emery': '3,krulkort,4,,', 'Mason Greenwood': '2,krulkort,4,,', 'Rayan Cherki': '1,krul,4,,',
+  'Joško Gvardiol': '5,zij,0,,', 'Moisés Caicedo': '2,fade,4,,', 'Enzo Fernández': '0,mullet,1,,', 'Reece James': '3,fade,4,stoppels,',
+  'Noni Madueke': '3,fade,4,,', 'Eberechi Eze': '3,fade,4,stoppels,', 'Gabriel Martinelli': '1,kort,4,,', 'Leroy Sané': '3,buzz,4,,',
+  'Serhou Guirassy': '3,kaal,4,baard,', 'Gregor Kobel': '5,kort,3,stoppels,', 'Xabi Simons': '2,krullang,4,,', 'Micky van de Ven': '5,zij,3,,',
+  'James Maddison': '5,kuif,0,,', 'Bryan Mbeumo': '3,fade,4,stoppels,', 'Matheus Cunha': '1,krul,4,,', 'Amad Diallo': '3,krulkort,4,,',
+  'Kenneth Taylor': '5,kuif,1,,', 'Jorrel Hato': '3,krulkort,4,,', 'Jobe Bellingham': '2,krulkort,4,,', 'Arda Güler': '0,medium,4,,',
+  'Endrick': '2,buzz,4,,', 'Aurélien Tchouaméni': '3,fade,4,,', 'Eduardo Camavinga': '3,dreads,4,,', 'Dean Huijsen': '0,kuif,1,,',
+  'Pau Cubarsí': '0,zij,1,,', 'Gavi': '0,fade,4,,', 'Ronald Araújo': '1,kort,4,baard,', 'Fermín López': '0,zij,4,,',
+  'Mikel Merino': '0,medium,1,stoppels,', 'Martín Zubimendi': '0,zij,1,,', 'David Raya': '0,kort,4,kort,', 'Riccardo Calafiori': '0,medium,4,kort,',
+  'Ibrahima Konaté': '3,kaal,4,sik,', 'Ryan Gravenberch': '3,krulkort,4,,', 'Cody Gakpo': '3,fade,4,,', 'Hugo Ekitiké': '3,krulkort,4,,',
+  'Andrew Robertson': '5,kort,7,stoppels,', 'Tijjani Reijnders': '1,zij,4,,', 'Matthijs de Ligt': '5,kort,3,,', 'Nathan Aké': '3,fade,4,,',
+  'Denzel Dumfries': '3,fade,4,baard,', 'Stefan de Vrij': '5,zij,0,,', 'Memphis Depay': '3,cornrows,4,baard,', 'Bart Verbruggen': '5,kort,7,,',
+  'Donyell Malen': '3,fade,4,,', 'Teun Koopmeiners': '5,zij,3,,', 'Jurriën Timber': '3,fade,4,,', 'Brian Brobbey': '3,buzz,4,,',
+  'Joshua Zirkzee': '3,dreads,4,,', 'Wout Weghorst': '5,kort,3,baard,', 'Quinten Timber': '3,fade,4,,', 'Noa Lang': '1,fade,4,,bleach',
+  'Steven Bergwijn': '3,fade,4,stoppels,', 'Justin Kluivert': '3,buzz,4,,', 'Luuk de Jong': '5,kort,7,kort,', 'Ivan Perišić': '5,zij,7,,',
+  'Davy Klaassen': '5,zij,7,stoppels,', 'Georginio Wijnaldum': '3,kaal,4,baard,', 'Marten de Roon': '5,kort,7,baard,', 'Daley Blind': '5,zij,3,,',
+  'Jasper Cillessen': '5,kort,7,stoppels,', 'Sébastien Haller': '3,kaal,4,baard,',
+  'Vivianne Miedema': '5,staart,7,,v', 'Lieke Martens': '5,staart,3,,v', 'Jill Roord': '5,staart,3,,v', 'Daphne van Domselaar': '5,staart,7,,v',
+  'Danielle van de Donk': '5,knot,7,,v', 'Victoria Pelova': '0,staart,4,,v', 'Esmee Brugts': '5,staart,3,,v', 'Lineth Beerensteyn': '3,knot,4,,v',
+  'Dominique Janssen': '5,staart,3,,v', 'Sherida Spitse': '5,staart,3,,v', 'Aitana Bonmatí': '0,staart,1,,v', 'Alexia Putellas': '0,staart,0,,v',
+  'Sam Kerr': '1,staart,4,,v', 'Lauren James': '2,knot,4,,v', 'Alessia Russo': '5,staart,0,,v',
+  'Johan Cruijff': '5,medium,1,,', 'Marco van Basten': '5,kort,7,,', 'Ruud Gullit': '3,dreads,4,snor,', 'Dennis Bergkamp': '5,kort,7,,',
+  'Frank Rijkaard': '3,krulkort,4,,', 'Edwin van der Sar': '5,kort,3,,', 'Arjen Robben': '5,kaal,5,,', 'Robin van Persie': '5,kort,1,stoppels,',
+  'Clarence Seedorf': '3,kaal,4,sik,', 'Patrick Kluivert': '3,kaal,4,sik,', 'Edgar Davids': '3,dreads,4,,', 'Ruud van Nistelrooy': '5,kort,1,,',
+  'Wesley Sneijder': '5,buzz,7,,', 'Ronald Koeman': '5,kort,3,,', 'Jaap Stam': '5,kaal,0,,', 'Zinédine Zidane': '0,kaal,1,,',
+  'Ronaldinho': '2,lang,4,,band', 'Thierry Henry': '3,kaal,4,,', 'Ronaldo Nazário': '2,kaal,4,,', 'Paolo Maldini': '0,medium,1,,',
+  'David Beckham': '5,kuif,7,kort,', 'Kaká': '1,zij,1,,', 'Andrea Pirlo': '0,lang,1,vol,', 'Wayne Rooney': '5,buzz,0,,',
+  'André Hazes': '0,zij,1,,', 'Jan Smit': '5,kuif,3,,', 'Gordon': '5,kuif,7,,', 'Gerard Joling': '5,kuif,4,,', 'Linda de Mol': '5,lang,3,,v',
+  'Snelle': '5,krul,3,,', 'Davina Michelle': '5,lang,0,,v', 'Duncan Laurence': '5,medium,0,,', 'Emma Heesters': '5,lang,3,,v',
+  'Ronnie Flex': '1,dreads,4,kort,', 'Monica Geuze': '5,lang,3,,v', 'Joost Klein': '5,mullet,6,,', 'NikkieTutorials': '5,lang,6,,v',
+  'Max Verstappen': '5,zij,0,stoppels,', 'Femke Bol': '5,staart,3,,v', 'Sifan Hassan': '3,knot,4,,v', 'Dafne Schippers': '5,staart,3,,v',
+  'Ireen Wüst': '5,staart,1,,v', 'Jutta Leerdam': '5,lang,1,,v', 'Chantal Janzen': '5,lang,3,,v', 'Michael van Gerwen': '0,kaal,1,,',
+  'Martin Garrix': '5,kuif,1,,', 'Armin van Buuren': '5,buzz,7,,', 'Mathieu van der Poel': '5,zij,1,,', 'Humberto Tan': '3,kaal,4,stoppels,',
+};
+
+// Spelers zonder vast uiterlijk krijgen een eigen, gevarieerd uiterlijk (vast per naam).
+const STYLE_LIGHT = ['kort', 'zij', 'kuif', 'fade', 'buzz', 'zij', 'gel', 'stekel', 'krul', 'kort', 'medium'];
+const STYLE_DARK = ['fade', 'krulkort', 'buzz', 'krulkort', 'cornrows', 'dreads', 'fade', 'kaal', 'afro', 'krulkort'];
+
 function parseDbPlayer(line) {
-  const [naam, pos0, r, nat, club, looks] = line.split('|');
+  const [naam, pos0, r, nat, club, looks0] = line.split('|');
   const pos = pos0 === 'RM' ? 'RW' : pos0;
   const h = hashOf(naam);
-  const vrouw = /,(staart|knot|lang)\b/.test(looks || '') && !/^(Pedri|Luka Modrić|Ronaldinho|Andrea Pirlo)$/.test(naam);
+  const looks = LOOKS[naam] || looks0 || '';
+  const [skin, hair, hc, beard, extra = ''] = looks ? looks.split(',') : [];
+  const exact = !!LOOKS[naam];
+  const vrouw = extra.includes('v') || (!exact && /^(staart|knot|lang)$/.test(hair || '') && !/^(Pedri|Luka Modrić|Ronaldinho|Andrea Pirlo)$/.test(naam));
   const p = {
     naam: naam.replace(/ II$/, ''), key: naam, pos, base: +r, nat, club, liga: CLUBS[club]?.[1] || 'ICN', man: !vrouw,
-    skin: h % 6, hair: ['kort', 'fade', 'kuif', 'krul', 'kaal'][(h >>> 3) % 5], hc: (h >>> 7) % 5, eyes: (h >>> 10) % 3, beard: '',
+    skin: looks ? +skin : h % 6, hair: hair || 'kort', hc: looks ? +hc : (h >>> 7) % 5, eyes: (h >>> 10) % 3, beard: beard || '',
+    band: extra.includes('band'), bleach: extra.includes('bleach'),
+    // Gezicht: breedte, kaak, neus, wenkbrauwen, ogen en lippen verschillen per persoon.
+    face: { w: ((h >>> 13) % 9 - 4) * 0.012, jaw: (h >>> 17) % 3, nose: (h >>> 19) % 3, brow: (h >>> 21) % 3, eye: (h >>> 23) % 3, lip: (h >>> 25) % 3 },
   };
-  if (looks) {
-    const [skin, hair, hc, beard] = looks.split(',');
-    Object.assign(p, { skin: +skin, hair, hc: +hc, beard: beard || '' });
+  if (!exact && p.man) {
+    const dark = p.skin >= 2 && p.skin <= 4;
+    const pool = dark ? STYLE_DARK : STYLE_LIGHT;
+    if (p.hair === 'kort') p.hair = pool[(h >>> 4) % pool.length];
+    if (!p.beard) p.beard = ['', '', '', '', 'stoppels', 'stoppels', 'kort', 'sik', '', 'baard'][(h >>> 27) % 10];
+    if (dark && p.hc !== 4 && p.hc !== 6) p.hc = 4;
   }
   const c = CLUBS[club] || CLUBS.ICON;
-  p.kit = KIT_OVERRIDE[club]?.[nat] || (club === 'BN' ? ['#f36c21', '#1e3a8a'] : [c[2], c[3]]);
+  p.celeb = c[1] === 'BNL';
+  p.kit = KIT_OVERRIDE[club]?.[nat] || [c[2], c[3]];
   return p;
 }
 const DB = PLAYER_DB.map(parseDbPlayer);
 const BY_NAME = new Map(DB.map((p) => [p.key, p]));
-const FOOTBALLERS = DB.filter((p) => p.club !== 'BN').sort((a, b) => a.base - b.base);
-const CELEBS = DB.filter((p) => p.club === 'BN').sort((a, b) => a.base - b.base);
+const FOOTBALLERS = DB.filter((p) => !p.celeb).sort((a, b) => a.base - b.base);
+const CELEBS = DB.filter((p) => p.celeb).sort((a, b) => a.base - b.base);
 
 // Cijfer → rating waar we een speler bij zoeken. Onder de 4: BN'ers (40-58); vanaf 4: voetballers (62 → 91).
 function targetRating(cijfer) {
@@ -214,7 +293,17 @@ function flagSVG(nat) {
   return box(`<rect width="30" height="20" fill="${a}"/>`);
 }
 // Clublogo: een schildje in de clubkleuren met de afkorting.
+// Logo's van de socials (eigen simpele tekening, als app-icoontje).
+const SOCIAL_ICON = {
+  TTK: '<rect x="1" y="2" width="22" height="22" rx="5" fill="#111"/><path d="M13 6 V16 A3 3 0 1 1 10 13" stroke="#25f4ee" stroke-width="2.4" fill="none" transform="translate(-.7 -.5)"/><path d="M13 6 V16 A3 3 0 1 1 10 13 M13 6 C13.5 8.5 15.5 10 18 10" stroke="#fe2c55" stroke-width="2.4" fill="none" transform="translate(.7 .5)"/><path d="M13 6 V16 A3 3 0 1 1 10 13 M13 6 C13.5 8.5 15.5 10 18 10" stroke="#fff" stroke-width="2.2" fill="none"/>',
+  YTB: '<rect x="1" y="5" width="22" height="16" rx="5" fill="#ff0033"/><path d="M10 9.5 L16 13 L10 16.5 Z" fill="#fff"/>',
+  IG: '<rect x="1" y="2" width="22" height="22" rx="6.5" fill="#d62976"/><rect x="1" y="2" width="22" height="11" rx="6" fill="#962fbf" opacity=".6"/><rect x="5.5" y="6.5" width="13" height="13" rx="4" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="12" cy="13" r="3" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="16" cy="9.2" r="1" fill="#fff"/>',
+  SPF: '<circle cx="12" cy="13" r="11" fill="#1db954"/><path d="M6 10 C10 8.6 14.5 9 18 10.8 M7 13.4 C10.2 12.4 13.8 12.7 16.6 14.1 M8 16.6 C10.5 15.9 13 16.1 15.2 17.2" stroke="#121212" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  X: '<rect x="1" y="2" width="22" height="22" rx="5" fill="#000"/><path d="M6.5 7 L17.5 19 M17.5 7 L6.5 19" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
+  TWT: '<path d="M4 3 H21 V15 L16 20 H12 L9 23 V20 H4 Z" fill="#9146ff"/><path d="M10 8 V13 M15 8 V13" stroke="#fff" stroke-width="2"/>',
+};
 function crestSVG(club) {
+  if (SOCIAL_ICON[club]) return `<svg viewBox="0 0 24 26" class="fc-crest social" aria-hidden="true">${SOCIAL_ICON[club]}</svg>`;
   const c = CLUBS[club] || CLUBS.ICON;
   const short = club === 'ICON' ? '★' : club === 'BN' ? 'BN' : club.slice(0, 3);
   return `<svg viewBox="0 0 24 28" class="fc-crest" aria-hidden="true"><path d="M12 1 L22 4 L22 13 C22 20 17 24.5 12 27 C7 24.5 2 20 2 13 L2 4 Z" fill="${c[2]}" stroke="${c[3]}" stroke-width="2"/><text x="12" y="17" font-size="${short.length > 2 ? 6.6 : 8}" font-weight="900" text-anchor="middle" fill="${c[3]}" font-family="Segoe UI, Arial, sans-serif">${short}</text></svg>`;

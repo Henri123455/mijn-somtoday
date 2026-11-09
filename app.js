@@ -56,6 +56,7 @@ $('#tabs').addEventListener('click', (e) => {
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab').forEach((s) => s.classList.toggle('active', s.id === tab));
   requestAnimationFrame(() => {
+    if (tab === 'cijfers' && !charts.time) renderTimeChart();
     if (tab === 'rooster') loadSchedule();
     if (tab === 'huiswerk') loadHomework();
     if (tab === 'ut') { window.renderTeam?.(); window.tmInit?.(); }
@@ -95,8 +96,7 @@ function renderGrades() {
 
   const css = getComputedStyle(document.documentElement);
   const color = (v) => css.getPropertyValue(v).trim();
-  Chart.defaults.color = color('--muted');
-  Chart.defaults.borderColor = color('--line');
+  if (window.Chart) { Chart.defaults.color = color('--muted'); Chart.defaults.borderColor = color('--line'); }
 
   renderAverageGrid(subjects);
   window.updatePackButton?.();
@@ -194,7 +194,29 @@ $('#avg-grid').addEventListener('click', (e) => {
 // Vaste kleuren per vak voor de grafiek met alle vakken.
 const VAK_COLORS = ['#3b6cf6', '#e8590c', '#2f9e44', '#ae3ec9', '#1098ad', '#f08c00', '#d6336c', '#5c7cfa', '#74b816', '#868e96', '#0ca678', '#f03e3e'];
 
+// De grafiek-bibliotheek is groot: pas laden als hij nodig is (sneller opstarten).
+let chartLoading = null;
+function loadChartLib() {
+  chartLoading ||= new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = document.querySelector('meta[name="chart-src"]')?.content || 'vendor/chart.umd.min.js';
+    sc.onload = () => {
+      const css = getComputedStyle(document.documentElement);
+      Chart.defaults.color = css.getPropertyValue('--muted').trim();
+      Chart.defaults.borderColor = css.getPropertyValue('--line').trim();
+      resolve();
+    };
+    sc.onerror = reject;
+    document.head.append(sc);
+  });
+  return chartLoading;
+}
 function renderTimeChart() {
+  if (!window.Chart) {
+    if (!$('#cijfers').classList.contains('active')) return; // wordt getekend zodra je naar Cijfers gaat
+    loadChartLib().then(renderTimeChart).catch(() => {});
+    return;
+  }
   const vak = $('#chart-vak').value;
   const list = grades.filter((g) => g.cijfer != null && g.datum && (!vak || g.vak === vak))
     .map((g) => ({ ...g, t: new Date(g.datum).getTime() }))
@@ -430,6 +452,7 @@ async function loadGrades() {
     const data = await api('/api/grades');
     grades = data.grades;
     if (!data.demo) try { localStorage.setItem('cache-grades', JSON.stringify({ grades: data.grades, averages: data.averages || {} })); } catch {}
+    if (!data.demo) window.notifyCheck?.('cijfers', data.grades);
     window.applySync?.(); // voortgang van de laptop (via de koppel-QR)
     averages = data.averages || {};
     $('#demo-banner').hidden = !data.demo;
@@ -543,15 +566,23 @@ async function loadSchedule() {
   const key = ymdLocal(days[0]);
   renderDayTabs(days);
   if (weekCache.key !== key) {
-    $('#day-list').innerHTML = '<div class="mgd-empty">Laden…</div>';
+    // Snel: eerst de bewaarde week van dit apparaat tonen, dan op de achtergrond verversen.
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem('cache-week') || 'null'); } catch {}
+    const fromCache = cached?.key === key;
+    if (fromCache) { weekCache = cached; renderDayTabs(days); renderDay(days[dayIndex]); }
+    else $('#day-list').innerHTML = '<div class="mgd-empty">Laden…</div>';
     try {
       const [s, hw] = await Promise.all([
         api(`/api/schedule?week=${key}`),
         api(`/api/homework?week=${key}`).catch(() => ({ items: [] })),
       ]);
+      if (ymdLocal(weekDays()[0]) !== key) return; // intussen naar een andere week gegaan
       weekCache = { key, lessons: s.items, homework: hw.items };
+      if (!s.demo && weekOffset === (((new Date().getDay() + 6) % 7) > 4 ? 1 : 0)) try { localStorage.setItem('cache-week', JSON.stringify(weekCache)); } catch {}
+      window.notifyCheck?.('rooster', weekCache);
     } catch (err) {
-      $('#day-list').innerHTML = `<div class="mgd-empty bad">${esc(err.message)}</div>`;
+      if (!fromCache) $('#day-list').innerHTML = `<div class="mgd-empty bad">${esc(err.message)}</div>`;
       return;
     }
     renderDayTabs(days);
@@ -858,14 +889,17 @@ async function loadStatus() {
     ? `<span class="me"><span class="me-avatar">${esc((s.naam || '?').charAt(0).toUpperCase())}</span><span class="me-name">${esc(s.naam)}</span></span>
        <button id="logout" class="secondary small">Uitloggen</button>`
     : '';
-  $('#logout')?.addEventListener('click', async () => { try { localStorage.removeItem('cache-grades'); localStorage.removeItem('cache-lm'); } catch {} grades = []; await api('/api/logout', {}); init(); });
+  $('#logout')?.addEventListener('click', async () => { try { ['cache-grades', 'cache-lm', 'cache-week', 'notify-seen'].forEach((k) => localStorage.removeItem(k)); } catch {} grades = []; await api('/api/logout', {}); init(); });
 }
 
 async function init() {
-  await loadStatus();
-  await loadGrades();
+  // Alles tegelijk: het rooster staat meteen klaar (uit het geheugen), de rest komt erbij.
+  weekCache = { key: null, lessons: [], homework: [] };
+  const status = loadStatus();
   if ($('#rooster').classList.contains('active')) loadSchedule();
   if ($('#huiswerk').classList.contains('active')) loadHomework();
+  await status;
+  await loadGrades();
 }
 
 init().then(async () => {
