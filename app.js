@@ -112,6 +112,7 @@ function renderGrades() {
 
 // Tabel "Alle cijfers": zoeken, filteren op vak en sorteren door op een kolomkop te klikken.
 let gtSort = { key: 'datum', dir: -1 };
+function hashVak(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
 function renderGradeTable() {
   const q = $('#gt-search').value.trim().toLowerCase();
   const vak = $('#gt-vak').value;
@@ -129,14 +130,16 @@ function renderGradeTable() {
   });
   $('#gt-count').textContent = `${list.length} van ${grades.length}`;
   $('#grade-table tbody').innerHTML = list.map((g) => `
-    <tr>
-      <td class="nowrap">${g.datum && !g.vorigJaar ? new Date(g.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' }) : '<span class="gt-badge">vorig jaar</span>'}</td>
-      <td><span class="gt-vak">${vakIcon(g.vak)} ${esc(g.vak)}</span></td>
-      <td>${esc(g.omschrijving)}</td>
-      <td class="num">${g.weging > 0 ? `${g.weging}×` : '<span class="hint">telt niet</span>'}</td>
-      <td class="num"><span class="gt-grade ${g.cijfer == null ? '' : g.cijfer < 5.5 ? 'bad' : g.cijfer < 6 ? 'warn' : 'good'}">${esc(g.resultaat)}</span></td>
+    <tr data-vc="${VAK_COLORS[hashVak(g.vak) % VAK_COLORS.length]}">
+      <td class="nowrap gt-d">${g.datum && !g.vorigJaar ? new Date(g.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' }) : '<span class="gt-badge">vorig jaar</span>'}</td>
+      <td class="gt-v"><span class="gt-vak">${vakIcon(g.vak)} ${esc(g.vak)}</span></td>
+      <td class="gt-t">${esc(g.omschrijving)}</td>
+      <td class="num gt-w">${g.weging > 0 ? `<span class="gt-weight">${g.weging}×</span>` : '<span class="hint">telt niet</span>'}</td>
+      <td class="num gt-c"><span class="gt-grade ${g.cijfer == null ? '' : g.cijfer < 5.5 ? 'bad' : g.cijfer < 6 ? 'warn' : 'good'}">${esc(g.resultaat)}</span></td>
     </tr>`).join('') || '<tr><td colspan="5" class="hint">Geen cijfers gevonden.</td></tr>';
+  document.querySelectorAll('#grade-table tbody tr[data-vc]').forEach((tr) => tr.style.setProperty('--vc', tr.dataset.vc));
 }
+function hashVak(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
 $('#grade-table thead').addEventListener('click', (e) => {
   const key = e.target.closest('[data-sort]')?.dataset.sort;
   if (!key) return;
@@ -409,7 +412,7 @@ function renderTimeChart() {
         },
       },
       plugins: {
-        legend: { labels: { usePointStyle: true, pointStyle: 'circle', boxHeight: 7, padding: 14, font: { size: 11.5 } } },
+        legend: { display: false }, // eigen legenda eronder: klikbare chips per vak
         tooltip: {
           animation: false,
           padding: 10,
@@ -432,6 +435,29 @@ function renderTimeChart() {
       },
     },
   });
+  renderChartLegend();
+}
+
+// Legenda als chips in de kleur van het vak. Klik = vak verbergen of tonen.
+function renderChartLegend() {
+  let box = $('#chart-legend');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'chart-legend';
+    box.className = 'chart-legend';
+    $('#chart-time').closest('.chart-box').after(box);
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ds]');
+      if (!b || !charts.time) return;
+      const i = +b.dataset.ds;
+      charts.time.setDatasetVisibility(i, !charts.time.isDatasetVisible(i));
+      charts.time.update();
+      b.classList.toggle('off', !charts.time.isDatasetVisible(i));
+    });
+  }
+  const ds = charts.time.data.datasets;
+  box.innerHTML = ds.map((d, i) => d.label ? `<button class="cl-chip${d.type === 'line' ? ' line' : ''}" data-ds="${i}" data-c="${esc(String(d.borderColor || d.backgroundColor || ''))}"><i></i>${esc(d.label)}</button>` : '').join('');
+  box.querySelectorAll('[data-c]').forEach((b) => b.style.setProperty('--c', b.dataset.c));
 }
 $('#chart-vak').addEventListener('change', renderTimeChart);
 
@@ -744,11 +770,12 @@ function renderHomework() {
   const hide = $('#hide-done').checked;
   const typeLabel = { TOETS: 'TOETS', GROTE_TOETS: 'GROTE TOETS' };
   const groups = {};
-  const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+  // Dagen die voorbij zijn niet meer tonen. Na 17:00 is de school klaar, dan telt vandaag ook als geweest.
+  const today0 = new Date(); if (today0.getHours() >= 17) today0.setDate(today0.getDate() + 1); today0.setHours(0, 0, 0, 0);
   homework
     .map((h) => ({ ...h, klaar: h.gemaakt || done.has(h.id) }))
     .filter((h) => !(hide && h.klaar))
-    .filter((h) => new Date(h.datum) >= today0) // komende weken: niets van vóór vandaag
+    .filter((h) => new Date(h.datum) >= today0) // alleen dagen die nog komen
     .sort((a, b) => new Date(a.datum) - new Date(b.datum))
     .forEach((h) => (groups[new Date(h.datum).toDateString()] ||= []).push(h));
 
@@ -883,6 +910,8 @@ function loggedIn() {
 // ---------- Status ----------
 async function loadStatus() {
   const s = await api('/api/status');
+  // Na een update staat er een nieuwe versie klaar: dan het venster vernieuwen, anders zie je nog de oude app.
+  if (s.version) { if (window.APP_VERSION && window.APP_VERSION !== s.version) location.reload(); window.APP_VERSION = s.version; }
   school = s.school;
   $('#hello').textContent = s.loggedIn ? `Hoi ${s.naam}! 👋` : 'Je eigen cijfers, rooster en huiswerk';
   $('#account').innerHTML = s.loggedIn

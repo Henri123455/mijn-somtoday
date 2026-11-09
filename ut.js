@@ -3,6 +3,10 @@
 // hoe hoger je cijfer, hoe beter de speler. Onder de 4 krijg je een BN'er.
 
 const ALL_PLAYERS = DB;
+const WOMEN = FOOTBALLERS.filter((p) => !p.man);
+const MEN = FOOTBALLERS.filter((p) => p.man);
+const WOMEN_MIN = Math.min(...WOMEN.map((p) => p.base));
+const WOMEN_MAX = Math.max(...WOMEN.map((p) => p.base));
 const MYSTERY = { naam: 'Onbekende Belofte', key: 'Onbekende Belofte', pos: 'CM', base: 60, nat: 'NED', club: 'BN', liga: 'BNL', man: true, skin: 1, hair: 'kort', hc: 1, eyes: 0, beard: '', kit: ['#5b6475', '#ffffff'] };
 
 // Welke speler bij welk cijfer hoort. Op volgorde van datum; elke speler maar één keer, zodat je club gevarieerd is.
@@ -15,8 +19,11 @@ function assignments() {
   const used = new Set();
   const sorted = grades.filter((g) => g.cijfer != null).sort((a, b) => new Date(a.datum) - new Date(b.datum) || String(a.id).localeCompare(String(b.id)));
   for (const g of sorted) {
-    const pool = g.cijfer < 4 ? CELEBS : FOOTBALLERS;
-    const target = targetRating(g.cijfer);
+    // Onder de 4: BN'ers. 4 tot 6: voetbalsters. Vanaf een 6: mannelijke voetballers (hoe hoger, hoe beter).
+    const pool = g.cijfer < 4 ? CELEBS : g.cijfer < 6 ? WOMEN : MEN;
+    const target = g.cijfer < 4 ? targetRating(g.cijfer)
+      : g.cijfer < 6 ? WOMEN_MIN + (WOMEN_MAX - WOMEN_MIN) * ((g.cijfer - 4) / 2)
+        : 65 + (g.cijfer - 6) * 6.5;
     let pick = null;
     for (let d = 0; d <= 12 && !pick; d++) {
       const cands = pool.filter((p) => Math.abs(p.base - target) <= d && !used.has(p.key));
@@ -230,6 +237,19 @@ function avatarSVG(p, shirt, mood, nummer) {
   return svg.split(`fill="${hair}"`).join(`fill="url(#${id}h)"`);
 }
 
+// Echte foto van de speler (Wikipedia/Wikimedia Commons), uitgesneden tot hoofd en schouders. Lukt laden niet: getekend poppetje.
+function portrait(p, tier) {
+  const src = typeof PHOTOS !== 'undefined' && PHOTOS[p.key];
+  if (!src) return avatarSVG(p, p.kit[0], MOODS[tier], '');
+  return `<div class="fc-pic"><img class="fc-img" src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-key="${esc(p.key)}" data-tier="${tier}"></div>`;
+}
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || !img.classList.contains('fc-img')) return;
+  const p = BY_NAME.get(img.dataset.key);
+  if (p) img.closest('.fc-photo').innerHTML = avatarSVG(p, p.kit[0], MOODS[img.dataset.tier], '');
+}, true);
+
 const MOODS = { icon: 'blij', toty: 'blij', rare: 'blij', gold: 'lach', silver: 'lach', bronze: 'neutraal', red: 'sip' };
 
 // De kaart zoals in FC: rating, positie, vlag en club links; portret rechts; naam; zes statistieken.
@@ -255,11 +275,11 @@ function cardHTML(c, size = 'md') {
         <div class="fc-pos">${p.pos}</div>
         <div class="fc-badges">${flagSVG(p.nat)}${crestSVG(p.club)}</div>
       </div>
-      <div class="fc-photo">${avatarSVG(p, p.kit[0], MOODS[c.tier.id], '')}</div>
+      <div class="fc-photo">${portrait(p, c.tier.id)}</div>
       <div class="fc-name"><span data-size="${nameSize}">${esc(p.naam)}</span></div>
       <div class="fc-stats">${c.stats.map((v, i) => `<div><b>${v}</b><span>${labels[i]}</span></div>`).join('')}</div>
       ${foot ? `<div class="fc-foot">${foot}</div>` : ''}
-      ${clubNaam ? `<div class="fc-club"><span data-size="${fit(clubNaam, size === 'sm' ? 10 : 13)}">${esc(clubNaam)}</span></div>` : ''}
+      ${clubNaam ? `<div class="fc-club" data-c1="${CLUBS[p.club]?.[2] || ''}" data-c2="${CLUBS[p.club]?.[3] || ''}"><span data-size="${fit(clubNaam, size === 'sm' ? 10 : 13)}">${esc(clubNaam)}</span></div>` : ''}
 
     </div>
   </div>`;
@@ -267,6 +287,14 @@ function cardHTML(c, size = 'md') {
 
 function paintCards(root = document) {
   root.querySelectorAll('.fc-card [data-size]').forEach((el) => { el.style.fontSize = el.dataset.size + 'em'; });
+  // Clubnaam in de clubkleuren (tekst altijd goed leesbaar).
+  root.querySelectorAll('.fc-club[data-c1]').forEach((el) => {
+    const lum = (h) => { const n = parseInt(String(h).slice(1, 7), 16) || 0; return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
+    const bg = el.dataset.c1, fg = el.dataset.c2;
+    if (!bg) return;
+    el.style.setProperty('--cb', bg); el.style.setProperty('--cr', fg || bg);
+    el.style.setProperty('--ct', Math.abs(lum(bg) - lum(fg)) > 0.35 ? fg : lum(bg) > 0.55 ? '#111111' : '#ffffff');
+  });
 }
 // Lichtgewicht: alleen nieuw toegevoegde kaarten verwerken (geen hele pagina doorzoeken bij elke wijziging).
 new MutationObserver((list) => {
@@ -369,6 +397,15 @@ function drawLinks(cards) {
   svg.innerHTML = LINKS.map(([a, b]) => `<line class="lk-${linkStrength(cards[a], cards[b])}" x1="${at[a].x}" y1="${at[a].y}" x2="${at[b].x}" y2="${at[b].y}"/>`).join('');
 }
 
+// Op de pc past het hele teamscherm in het venster: alleen de lijst met spelers scrolt.
+function fitTeamView() {
+  const lay = document.querySelector('#ut-team-view .ut-layout');
+  if (!lay || !lay.offsetParent) return;
+  const top = lay.getBoundingClientRect().top + window.scrollY;
+  lay.style.setProperty('--ut-h', Math.max(560, window.innerHeight - top - 62) + 'px');
+}
+window.addEventListener('resize', () => requestAnimationFrame(fitTeamView));
+
 function renderTeam() {
   loadTeam();
   const owned = ownedCards();
@@ -392,6 +429,7 @@ function renderTeam() {
   }).join('');
   document.querySelectorAll('#ut-pitch-slots .ut-slot').forEach((el) => { el.style.left = el.dataset.x + '%'; el.style.top = el.dataset.y + '%'; });
   drawLinks(cards);
+  fitTeamView();
 
   $('#ut-bench').innerHTML = BENCH.map((b) => {
     const c = byId.get(team[b]);
@@ -521,3 +559,84 @@ async function teamPhoto() {
 $('#ut-photo-btn').addEventListener('click', teamPhoto);
 
 window.renderTeam = renderTeam;
+
+// ---------- Kaarten slepen ----------
+// Sleep een kaart uit je club naar een plek in het veld of op de bank, of sleep spelers in het veld om ze te ruilen.
+// Werkt met muis en vinger. Gewoon tikken blijft werken zoals altijd.
+(function dragCards() {
+  let drag = null; // { id, fromSlot, x0, y0, ghost, moved }
+  let suppressClick = 0;
+  window.addEventListener('click', (ev) => { if (Date.now() < suppressClick) { ev.stopPropagation(); ev.preventDefault(); suppressClick = 0; } }, true);
+  const cardIdAt = (el) => {
+    const club = el.closest('#ut-club [data-card]');
+    if (club) return { id: club.dataset.card, fromSlot: null, el: club };
+    const slot = el.closest('#ut-pitch-slots [data-slot], #ut-bench [data-slot]');
+    if (slot && team[slot.dataset.slot]) return { id: team[slot.dataset.slot], fromSlot: slot.dataset.slot, el: slot };
+    return null;
+  };
+  document.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target.closest('.ut-remove') || !e.target.closest('#ut-team-view')) return;
+    const hit = cardIdAt(e.target);
+    if (!hit) return;
+    if (e.pointerType === 'touch' && !hit.fromSlot) return; // op de telefoon scrolt de lijst; tik om te plaatsen
+    drag = { ...hit, x0: e.clientX, y0: e.clientY, moved: false, pid: e.pointerId };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    if (!drag.moved) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 8) return;
+      drag.moved = true;
+      const src = drag.el.querySelector('.fc-card');
+      const ghost = src.cloneNode(true);
+      ghost.classList.add('ut-ghost');
+      const r = src.getBoundingClientRect();
+      ghost.style.width = r.width + 'px';
+      ghost.style.height = r.height + 'px';
+      ghost.style.fontSize = getComputedStyle(src).fontSize;
+      drag.dx = r.width / 2; drag.dy = r.height / 2;
+      document.body.append(ghost);
+      drag.ghost = ghost;
+      drag.el.classList.add('ut-dragging');
+      document.body.classList.add('ut-drag-on');
+    }
+    e.preventDefault();
+    drag.ghost.style.left = e.clientX - drag.dx + 'px';
+    drag.ghost.style.top = e.clientY - drag.dy + 'px';
+    document.querySelectorAll('.ut-drop').forEach((x) => x.classList.remove('ut-drop'));
+    drag.ghost.hidden = true;
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('#ut-pitch-slots [data-slot], #ut-bench [data-slot]');
+    drag.ghost.hidden = false;
+    over?.classList.add('ut-drop');
+  }, { passive: false });
+  const end = (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const d = drag;
+    drag = null;
+    if (!d.moved) return;
+    d.ghost.hidden = true;
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('#ut-pitch-slots [data-slot], #ut-bench [data-slot]');
+    d.ghost.remove();
+    d.el.classList.remove('ut-dragging');
+    document.body.classList.remove('ut-drag-on');
+    document.querySelectorAll('.ut-drop').forEach((x) => x.classList.remove('ut-drop'));
+    // na een sleep geen klik laten doorgaan
+    suppressClick = Date.now() + 400;
+    if (over) {
+      const to = over.dataset.slot;
+      const prev = team[to];
+      for (const k of Object.keys(team)) if (team[k] === d.id) delete team[k];
+      team[to] = d.id;
+      if (d.fromSlot && prev && prev !== d.id) team[d.fromSlot] = prev; // ruilen
+      selectedSlot = null;
+      saveTeam();
+      renderTeam();
+    } else if (d.fromSlot && !e.target.closest('#ut-team-view')) {
+      // buiten het veld losgelaten: speler uit het team
+      delete team[d.fromSlot];
+      saveTeam();
+      renderTeam();
+    }
+  };
+  document.addEventListener('pointerup', end);
+  document.addEventListener('pointercancel', (e) => { if (drag?.ghost) { drag.ghost.remove(); drag.el.classList.remove('ut-dragging'); document.body.classList.remove('ut-drag-on'); } drag = null; });
+})();

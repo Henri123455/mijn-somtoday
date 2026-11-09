@@ -339,3 +339,64 @@ body.match-open { overflow: hidden; }
 }
 .fc-bg { background: linear-gradient(155deg, color-mix(in srgb, var(--fc-a) 70%, #fff), var(--fc-c) 70%, color-mix(in srgb, var(--fc-c) 70%, #000)); }
 .fc-card[data-tier="red"] .fc-bg::after { background: radial-gradient(70% 38% at 66% 26%, rgba(255, 200, 200, .4), transparent 70%), repeating-linear-gradient(135deg, rgba(0, 0, 0, .1) 0 .14em, transparent .14em .7em), linear-gradient(165deg, var(--fc-a), var(--fc-b) 55%, var(--fc-c)); }
+
+/* ---------- Pc: breder, en alleen de spelerslijst scrolt ---------- */
+@media (min-width: 1000px) {
+  body:has(#ut.active) main { max-width: 1600px; }
+  #ut-team-view .ut-layout { --pitch: min(calc(var(--ut-h, 820px) - 172px), 60vw); grid-template-columns: var(--pitch) minmax(0, 1fr); grid-template-rows: auto auto; height: var(--ut-h, auto); align-items: start; }
+  #ut-team-view .ut-pitch { aspect-ratio: 1 / 1; width: var(--pitch); }
+  #ut-team-view .ut-pitch .fc-sm { font-size: clamp(2.6px, 1.02cqw, 7px); }
+  #ut-team-view .ut-empty-card { width: clamp(40px, 15cqw, 104px); height: clamp(58px, 21.6cqw, 150px); }
+  #ut-team-view .ut-bench-wrap { margin-top: 0; }
+  #ut-team-view .ut-side { height: var(--ut-h, auto); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  #ut-team-view .ut-club { flex: 1; min-height: 0; max-height: none; }
+  #ut-team-view .ut-side > :not(.ut-club) { flex: none; }
+}
+
+/* ---------- Gelijke belichting op elke kaart (niet overbelicht) ---------- */
+.fc-bg { background: linear-gradient(155deg, var(--fc-b), var(--fc-c)); }
+.fc-card:is([data-tier="gold"], [data-tier="rare"], [data-tier="silver"], [data-tier="bronze"], [data-tier="icon"]) .fc-bg::after {
+  background:
+    radial-gradient(60% 34% at 64% 24%, rgba(255, 255, 255, .22), transparent 70%),
+    linear-gradient(115deg, transparent 0 34%, rgba(255, 255, 255, .1) 40%, transparent 46%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .05) 0 .12em, transparent .12em .7em),
+    radial-gradient(120% 60% at 50% 115%, rgba(0, 0, 0, .26), transparent 60%),
+    linear-gradient(165deg, var(--fc-a) 0%, var(--fc-b) 50%, var(--fc-c) 100%);
+}
+.fc-card[data-tier="silver"] { --fc-a: #e3e8ee; --fc-b: #aab4bf; --fc-c: #69737e; }
+.fc-card[data-tier="gold"] { --fc-a: #ecd68f; --fc-b: #c39b45; --fc-c: #7f6220; }
+.fc-card[data-tier="rare"] { --fc-a: #f4e19a; --fc-b: #d5a83a; --fc-c: #7f5806; }
+.fc-card[data-tier="bronze"] { --fc-a: #e6b98d; --fc-b: #a96c3f; --fc-c: #633817; }
+.fc-shine::before { background: linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, .28) 50%, transparent 58%); }
+
+/* ---------- Klein (veld/bank): naam, vak en club onder elkaar zonder overlap ---------- */
+.fc-sm .fc-name { top: 8.2em; height: 1.35em; }
+.fc-sm .fc-foot { top: 10.85em; height: 1.6em; }
+.fc-sm .fc-club { top: 13.75em; height: 1.3em; }
+/* slepen */
+.ut-ghost { position: fixed; z-index: 1000; pointer-events: none; transform: rotate(-4deg) scale(1.06); filter: drop-shadow(0 1em 1.6em rgba(0, 0, 0, .6)); transition: none; }
+.ut-dragging { opacity: .35; }
+.ut-drop .fc-card, .ut-drop .ut-empty-card { outline: 3px solid #22e3a4; outline-offset: 3px; transform: scale(1.08); }
+body.ut-drag-on { cursor: grabbing; user-select: none; }
+#ut-pitch-slots .fc-card, #ut-bench .fc-card { touch-action: none; }
+#ut-club .ut-club-card, #ut-pitch-slots .ut-slot.filled, #ut-bench .ut-slot.filled { cursor: grab; }
+.fc-sm .fc-club span { padding: .05em .55em; border-radius: .45em; background: var(--cb, rgba(0, 0, 0, .2)); color: var(--ct, inherit); box-shadow: 0 .05em .2em rgba(0, 0, 0, .3); font-weight: 800; }
+.fc-sm .fc-club { opacity: 1; }
+.fc-sm .fc-club span { border: .14em solid var(--cr, transparent); }
+
+/* ---------- Echte spelersfoto: alleen hoofd en schouders, zacht overlopend in de kaart ---------- */
+.fc-pic { position: absolute; inset: .3em .2em .2em .9em; overflow: hidden;
+  -webkit-mask-image: radial-gradient(75% 80% at 52% 42%, #000 55%, transparent 78%); mask-image: radial-gradient(75% 80% at 52% 42%, #000 55%, transparent 78%); }
+.fc-img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 16%; display: block; transform: scale(1.18); transform-origin: 50% 22%;
+  filter: saturate(1.05) contrast(1.04) brightness(.98); }
+.fc-sm .fc-pic { inset: .6em .4em .6em 1.4em; }
+
+/* Pc: wisselbank verticaal tussen veld en club, zodat het veld de volle hoogte krijgt */
+@media (min-width: 1000px) {
+  #ut-team-view .ut-layout { --pitch: min(var(--ut-h, 820px), 50vw); grid-template-columns: var(--pitch) auto minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "pitch bench side"; }
+  #ut-team-view .ut-bench-wrap { height: var(--ut-h, auto); display: flex; flex-direction: column; padding: 8px; container-type: normal; }
+  #ut-team-view .ut-bench-title { writing-mode: horizontal-tb; text-align: center; font-size: 10px; }
+  #ut-team-view .ut-bench { flex-direction: column; justify-content: space-between; flex: 1; margin-top: 6px; gap: 4px; }
+  #ut-team-view .ut-bench .fc-sm { font-size: calc((var(--ut-h, 820px) - 70px) / 118); }
+  #ut-team-view .ut-bench .ut-empty-card { width: calc((var(--ut-h, 820px) - 70px) / 118 * 15); height: calc((var(--ut-h, 820px) - 70px) / 118 * 21.6); }
+}

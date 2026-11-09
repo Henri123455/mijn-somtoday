@@ -996,3 +996,37 @@ input.switch:focus-visible { outline: 3px solid var(--accent-soft); outline-offs
 .pp-schools button { text-align: left; justify-content: flex-start; }
 .pp-schools small { opacity: .7; margin-left: 4px; }
 #pp-school { width: 100%; margin-top: 8px; }
+
+/* ---------- Alle cijfers: mooier, en op de telefoon een korte lijst ---------- */
+.grade-table { border-collapse: separate; border-spacing: 0 6px; }
+.grade-table thead th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; border: 0; padding-bottom: 2px; }
+.grade-table tbody tr { background: color-mix(in srgb, var(--vc, var(--accent)) 6%, var(--card)); transition: background .15s, transform .15s; }
+.grade-table tbody td { border: 0; padding-top: 11px; padding-bottom: 11px; }
+.grade-table tbody td:first-child { border-left: 4px solid var(--vc, var(--accent)); border-radius: 10px 0 0 10px; }
+.grade-table tbody td:last-child { border-radius: 0 10px 10px 0; }
+.grade-table tbody tr:hover { background: color-mix(in srgb, var(--vc, var(--accent)) 14%, var(--card)); }
+.gt-vak { font-weight: 700; }
+.gt-t { color: var(--text); }
+.gt-weight { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: var(--bg); color: var(--muted); }
+.gt-grade { min-width: 48px; font-size: 15px; padding: 5px 10px; }
+.gt-grade.good { background: var(--good); color: #fff; } .gt-grade.warn { background: var(--warn); color: #1a1200; } .gt-grade.bad { background: var(--bad); color: #fff; }
+@media (max-width: 640px) {
+  .grade-table thead { display: none; }
+  .grade-table, .grade-table tbody { display: block; width: 100%; }
+  .grade-table tbody tr { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "vak vak cijfer" "toets toets cijfer" "datum weging cijfer";
+    gap: 3px 10px; align-items: center; margin-bottom: 8px; padding: 10px 12px; border-radius: 12px; border-left: 4px solid var(--vc, var(--accent)); }
+  .grade-table tbody td { display: block; padding: 0; border: 0 !important; border-radius: 0 !important; min-width: 0; }
+  .grade-table .gt-v { grid-area: vak; } .grade-table .gt-t { grid-area: toets; font-size: 13.5px; color: var(--muted); overflow-wrap: anywhere; }
+  .grade-table .gt-d { grid-area: datum; font-size: 12.5px; } .grade-table .gt-w { grid-area: weging; text-align: left; font-size: 12.5px; }
+  .grade-table .gt-c { grid-area: cijfer; align-self: center; }
+  .gt-vak { white-space: normal; }
+  .gt-grade { min-width: 54px; font-size: 18px; padding: 8px 10px; }
+  .grade-table td[colspan] { grid-column: 1 / -1; }
+}
+.chart-legend { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
+.cl-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  background: color-mix(in srgb, var(--c, var(--accent)) 12%, transparent); color: var(--text); border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 35%, transparent); cursor: pointer; }
+.cl-chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--c, var(--accent)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, var(--accent)) 25%, transparent); }
+.cl-chip.line i { width: 14px; height: 3px; border-radius: 2px; box-shadow: none; }
+.cl-chip:hover { background: color-mix(in srgb, var(--c, var(--accent)) 22%, transparent); }
+.cl-chip.off { opacity: .4; text-decoration: line-through; }
