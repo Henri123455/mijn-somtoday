@@ -239,13 +239,15 @@ function showPosition() {
 function showClub() {
   step = 'club';
   const p = current.player;
-  stage(`
+  const sc = stage(`
     <div class="pk-reveal">
       <div class="pk-label">CLUB</div>
       <div class="pk-crest">${crestSVG(p.club)}</div>
-      <div class="pk-big-text small">${esc(CLUBS[p.club]?.[0] || p.club)}</div>
+      <div class="pk-clubname" data-c1="${CLUBS[p.club]?.[2] || ''}" data-c2="${CLUBS[p.club]?.[3] || ''}">${esc(CLUBS[p.club]?.[0] || p.club)}</div>
       <div class="pk-sub">${esc(LEAGUES[p.liga] || '')}</div>
     </div>`, 'walkout', current.tier.id);
+  const cn = sc.querySelector('.pk-clubname');
+  if (cn?.dataset.c1) { cn.style.setProperty('--cb', cn.dataset.c1); cn.style.setProperty('--cr', cn.dataset.c2 || cn.dataset.c1); }
   sfx.tick();
   later(showSilhouette, 1700);
 }
@@ -312,7 +314,7 @@ function showCard() {
 
   setTimeout(() => {
     sfx.reveal(c.tier.id);
-    if (WALKOUT.includes(c.tier.id)) confetti(fx(), c.tier.id === 'toty' || c.tier.id === 'icon' ? 90 : 50);
+    if (WALKOUT.includes(c.tier.id)) fireworks(fx(), c.tier.id === 'toty' || c.tier.id === 'icon' ? 3 : 2);
   }, 1100);
   typeText(el.querySelector('.pk-sentence'), sentenceFor(c), 1700);
 }

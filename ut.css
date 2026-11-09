@@ -400,3 +400,33 @@ body.ut-drag-on { cursor: grabbing; user-select: none; }
   #ut-team-view .ut-bench .fc-sm { font-size: calc((var(--ut-h, 820px) - 70px) / 118); }
   #ut-team-view .ut-bench .ut-empty-card { width: calc((var(--ut-h, 820px) - 70px) / 118 * 15); height: calc((var(--ut-h, 820px) - 70px) / 118 * 21.6); }
 }
+
+/* ---------- Laadscherm ---------- */
+#ut { position: relative; }
+.ut-loader { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; border-radius: inherit;
+  background: radial-gradient(800px 400px at 50% 30%, #17305c, transparent 70%), #060a14; transition: opacity .45s; }
+.ut-loader.out { opacity: 0; pointer-events: none; }
+.utl-box { display: flex; flex-direction: column; align-items: center; gap: 14px; color: #fff; text-align: center; }
+.utl-box .fc-logo { width: 64px; height: 64px; font-size: 26px; display: grid; place-items: center; border-radius: 14px; animation: utl-pulse 1.4s ease-in-out infinite; box-shadow: 0 0 40px rgba(34, 227, 164, .45); }
+.utl-box b { letter-spacing: .3em; font-size: 14px; font-family: "Bahnschrift", "Segoe UI", sans-serif; }
+.utl-box small { color: var(--ut-mut); letter-spacing: .08em; }
+.utl-bar { width: min(320px, 70vw); height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.utl-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #22e3a4, #8ff7d4); box-shadow: 0 0 12px #22e3a4; transition: width .25s; }
+@keyframes utl-pulse { 50% { transform: scale(1.08); } }
+
+/* ---------- Knoppen in FC-stijl ---------- */
+#ut .ut-views { display: flex; gap: 6px; padding: 5px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--ut-line); width: fit-content; max-width: 100%; }
+#ut .ut-views button { position: relative; padding: 11px 26px; border: 0; border-radius: 0; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .14em;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); background: linear-gradient(180deg, #1b2a45, #111a2d) !important; color: #9fb0cc !important; transition: color .15s, filter .15s, transform .15s; cursor: pointer; }
+#ut .ut-views button:hover { color: #fff !important; filter: brightness(1.25); }
+#ut .ut-views button.active { background: linear-gradient(180deg, #2af0b0, #10a979) !important; color: #03150e !important; box-shadow: 0 0 24px rgba(34, 227, 164, .35); }
+#ut .ut-actions { gap: 8px; }
+#ut .ut-actions button { height: 42px; padding: 0 18px; border-radius: 10px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: transform .12s, filter .15s, border-color .15s; }
+#ut .ut-actions button:active { transform: translateY(1px) scale(.98); }
+#ut .ut-actions button:not(.secondary) { background: linear-gradient(180deg, #2af0b0, #10a979) !important; color: #03150e !important; box-shadow: 0 6px 20px rgba(34, 227, 164, .25), inset 0 1px 0 rgba(255, 255, 255, .45); border: 0; }
+#ut .ut-actions button:not(.secondary):hover { filter: brightness(1.08); }
+#ut .ut-actions button.secondary { background: rgba(255, 255, 255, .05) !important; border: 1px solid rgba(255, 255, 255, .14); color: #dbe4f3 !important; }
+#ut .ut-actions button.secondary:hover { border-color: #22e3a4; color: #fff !important; background: rgba(34, 227, 164, .08) !important; }
+@media (max-width: 700px) { #ut .ut-views { width: 100%; } #ut .ut-views button { flex: 1; padding: 10px 8px; font-size: 11px; letter-spacing: .08em; } }
+.fc-img.faced { position: absolute; height: auto; max-width: none; object-fit: fill; transform: none; }
+.fc-pic { -webkit-mask-image: radial-gradient(80% 85% at 50% 42%, #000 60%, transparent 82%); mask-image: radial-gradient(80% 85% at 50% 42%, #000 60%, transparent 82%); }

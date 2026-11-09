@@ -238,10 +238,12 @@ function avatarSVG(p, shirt, mood, nummer) {
 }
 
 // Echte foto van de speler (Wikipedia/Wikimedia Commons), uitgesneden tot hoofd en schouders. Lukt laden niet: getekend poppetje.
-function portrait(p, tier) {
-  const src = typeof PHOTOS !== 'undefined' && PHOTOS[p.key];
+function portrait(p, tier, size) {
+  const src = typeof PHOTOS !== 'undefined' && ((size === 'lg' && typeof PHOTOS_HD !== 'undefined' && PHOTOS_HD[p.key]) || PHOTOS[p.key]);
   if (!src) return avatarSVG(p, p.kit[0], MOODS[tier], '');
-  return `<div class="fc-pic"><img class="fc-img" src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-key="${esc(p.key)}" data-tier="${tier}"></div>`;
+  const f = typeof FACES !== 'undefined' && FACES[p.key];
+  const face = f && f[0] != null ? ` data-f="${f.slice(0, 5).join(',')}"` : '';
+  return `<div class="fc-pic"><img class="fc-img${face ? ' faced' : ''}"${face} src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-key="${esc(p.key)}" data-tier="${tier}"></div>`;
 }
 document.addEventListener('error', (e) => {
   const img = e.target;
@@ -273,9 +275,9 @@ function cardHTML(c, size = 'md') {
       <div class="fc-left">
         <div class="fc-ovr">${c.ovr}</div>
         <div class="fc-pos">${p.pos}</div>
-        <div class="fc-badges">${flagSVG(p.nat)}${crestSVG(p.club)}</div>
+        <div class="fc-badges">${flagSVG(p.nat)}</div>
       </div>
-      <div class="fc-photo">${portrait(p, c.tier.id)}</div>
+      <div class="fc-photo">${portrait(p, c.tier.id, size)}</div>
       <div class="fc-name"><span data-size="${nameSize}">${esc(p.naam)}</span></div>
       <div class="fc-stats">${c.stats.map((v, i) => `<div><b>${v}</b><span>${labels[i]}</span></div>`).join('')}</div>
       ${foot ? `<div class="fc-foot">${foot}</div>` : ''}
@@ -287,6 +289,18 @@ function cardHTML(c, size = 'md') {
 
 function paintCards(root = document) {
   root.querySelectorAll('.fc-card [data-size]').forEach((el) => { el.style.fontSize = el.dataset.size + 'em'; });
+  // Foto zo vergroten en verschuiven dat het gezicht altijd even groot en op dezelfde plek staat (hoofd en schouders).
+  root.querySelectorAll('img.fc-img.faced[data-f]').forEach((img) => {
+    const [x, y, w, h, ar] = img.dataset.f.split(',').map(Number);
+    const k = 1.07; // hoogte/breedte van het fotovak
+    let ih = (0.4 * k) / h; let iw = ih * ar;
+    const s = Math.max(1, 1 / iw, k / ih); iw *= s; ih *= s;
+    let left = 0.5 - (x + w / 2) * iw; let top = 0.43 * k - (y + h / 2) * ih;
+    left = Math.min(0, Math.max(1 - iw, left)); top = Math.min(0, Math.max(k - ih, top));
+    img.style.width = (iw * 100).toFixed(2) + '%';
+    img.style.left = (left * 100).toFixed(2) + '%';
+    img.style.top = ((top / k) * 100).toFixed(2) + '%';
+  });
   // Clubnaam in de clubkleuren (tekst altijd goed leesbaar).
   root.querySelectorAll('.fc-club[data-c1]').forEach((el) => {
     const lum = (h) => { const n = parseInt(String(h).slice(1, 7), 16) || 0; return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
@@ -640,3 +654,45 @@ window.renderTeam = renderTeam;
   document.addEventListener('pointerup', end);
   document.addEventListener('pointercancel', (e) => { if (drag?.ghost) { drag.ghost.remove(); drag.el.classList.remove('ut-dragging'); document.body.classList.remove('ut-drag-on'); } drag = null; });
 })();
+
+// ---------- Laadscherm voor Ultimate Team ----------
+// De eerste keer per sessie: wachten tot de foto's van je team er zijn (max. 6 seconden), met een voortgangsbalk.
+window.utLoading = function () {
+  try { if (sessionStorage.getItem('ut-loaded')) return; } catch {}
+  const ut = document.getElementById('ut');
+  const imgs = [...ut.querySelectorAll('#ut-pitch-slots img.fc-img, #ut-bench img.fc-img, #ut-club .ut-club-card:nth-child(-n+9) img.fc-img')];
+  if (!imgs.length) return;
+  imgs.forEach((i) => { i.loading = 'eager'; });
+  const ov = document.createElement('div');
+  ov.className = 'ut-loader';
+  ov.innerHTML = `<div class="utl-box"><span class="fc-logo">UT</span><b>SOMTODAY ULTIMATE TEAM</b>
+    <div class="utl-bar"><i></i></div><small>Spelers laden…</small></div>`;
+  ut.append(ov);
+  const bar = ov.querySelector('.utl-bar i');
+  const start = performance.now();
+  const done = () => imgs.filter((i) => i.complete).length;
+  const tick = () => {
+    const k = done() / imgs.length;
+    bar.style.width = Math.round(k * 100) + '%';
+    const t = performance.now() - start;
+    if ((k >= 1 && t > 700) || t > 6000) {
+      try { sessionStorage.setItem('ut-loaded', '1'); } catch {}
+      ov.classList.add('out');
+      setTimeout(() => ov.remove(), 450);
+      return;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+};
+// Foto's van je team alvast op de achtergrond laden, zodat Ultimate Team daarna snel opent.
+setTimeout(() => {
+  const go = () => {
+    try {
+      loadTeam();
+      const ids = new Set(Object.values(team));
+      for (const c of ownedCards()) if (ids.has(c.g.id) && PHOTOS[c.player.key]) { const im = new Image(); im.decoding = 'async'; im.src = PHOTOS[c.player.key]; }
+    } catch {}
+  };
+  (window.requestIdleCallback || setTimeout)(go, 2500);
+}, 3000);

@@ -59,7 +59,7 @@ $('#tabs').addEventListener('click', (e) => {
     if (tab === 'cijfers' && !charts.time) renderTimeChart();
     if (tab === 'rooster') loadSchedule();
     if (tab === 'huiswerk') loadHomework();
-    if (tab === 'ut') { window.renderTeam?.(); window.tmInit?.(); }
+    if (tab === 'ut') { window.renderTeam?.(); window.tmInit?.(); window.utLoading?.(); }
     if (tab === 'leermiddelen') window.loadLeermiddelen?.();
   });
 });

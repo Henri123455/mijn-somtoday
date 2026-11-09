@@ -1035,3 +1035,38 @@ input.switch:focus-visible { outline: 3px solid var(--accent-soft); outline-offs
 .grade-table tbody tr.gt-row:hover { background: color-mix(in srgb, #3b82f6 13%, var(--card)); }
 .grade-table tbody tr.gt-row.good { --vc: var(--good); } .grade-table tbody tr.gt-row.warn { --vc: var(--warn); }
 .grade-table tbody tr.gt-row.bad { --vc: var(--bad); } .grade-table tbody tr.gt-row.neutral { --vc: #94a3b8; }
+.pk-clubname { display: inline-block; margin: 18px auto 8px; padding: 14px 30px; border-radius: 16px; font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: .02em;
+  background: var(--cb, #222); color: #fff; border: 5px solid var(--cr, #fff); text-shadow: 0 2px 8px rgba(0, 0, 0, .6); box-shadow: 0 0 50px color-mix(in srgb, var(--glow) 55%, transparent);
+  animation: pk-zoom .7s cubic-bezier(.2, 1.3, .4, 1) both; }
+@media (max-width: 600px) { .pk-clubname { font-size: 26px; padding: 10px 18px; } }
+
+/* ---------- Walkout in de stijl van de oudere FIFA's: stadion, spotlights, strakke letters ---------- */
+#pack-stage { background: radial-gradient(120% 70% at 50% 110%, #0d1a2e 0, #05080f 55%, #020306 100%); }
+.pk-rays { display: none; }
+.pk-bg::before, .pk-bg::after { content: ''; position: absolute; bottom: -10%; width: 38vmax; height: 140%; opacity: 0; transition: opacity .8s;
+  background: linear-gradient(0deg, color-mix(in srgb, var(--glow) 55%, transparent), transparent 75%); filter: blur(18px); mix-blend-mode: screen; transform-origin: 50% 100%; }
+.pk-bg::before { left: 8%; animation: pk-spot 6s ease-in-out infinite alternate; }
+.pk-bg::after { right: 8%; animation: pk-spot 6s ease-in-out -3s infinite alternate-reverse; }
+.pack-stage[data-mode="walkout"] .pk-bg::before, .pack-stage[data-mode="walkout"] .pk-bg::after,
+.pack-stage[data-mode="card"] .pk-bg::before, .pack-stage[data-mode="card"] .pk-bg::after { opacity: .55; }
+@keyframes pk-spot { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+.pk-floor { background: radial-gradient(ellipse at center, color-mix(in srgb, var(--glow) 28%, transparent), transparent 70%); }
+/* strak inschuiven in plaats van stuiteren */
+.pk-reveal, .pk-flag, .pk-crest, .pk-clubname, .pk-grade, .pk-pos { animation: pk-fifa-in .75s cubic-bezier(.16, 1, .3, 1) both; }
+.pk-reveal > :nth-child(2) { animation-delay: .12s; } .pk-reveal > :nth-child(3) { animation-delay: .26s; } .pk-reveal > :nth-child(4) { animation-delay: .4s; }
+.pk-reveal > * { animation: pk-fifa-in .75s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes pk-fifa-in { from { opacity: 0; transform: translateX(-70px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.pk-label { font-size: 13px; font-weight: 600; letter-spacing: .5em; opacity: .7; padding-bottom: 8px; margin-bottom: 14px; border-bottom: 1px solid color-mix(in srgb, var(--glow) 60%, transparent); display: inline-block; }
+.pk-big-text { font-family: "Bahnschrift", "DIN Alternate", "Segoe UI", sans-serif; font-weight: 700; letter-spacing: .04em; text-shadow: 0 0 18px rgba(0, 0, 0, .8); }
+.pk-pos { font-family: "Bahnschrift", "DIN Alternate", "Segoe UI", sans-serif; font-weight: 700; color: #fff; text-shadow: 0 0 30px color-mix(in srgb, var(--glow) 80%, transparent); letter-spacing: .02em; }
+.pk-clubname { border-radius: 6px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-weight: 700; font-size: 30px; padding: 10px 26px; border-width: 3px; }
+.pk-grade { border-radius: 8px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-weight: 700; }
+.pk-flag .fc-flagsvg { border-radius: 2px; box-shadow: 0 10px 40px rgba(0, 0, 0, .6), 0 0 40px color-mix(in srgb, var(--glow) 35%, transparent); }
+.pk-crest .fc-crest { filter: drop-shadow(0 10px 30px rgba(0, 0, 0, .6)) drop-shadow(0 0 18px color-mix(in srgb, var(--glow) 50%, transparent)); }
+.pk-sil { filter: drop-shadow(0 0 40px var(--glow)); }
+.pk-count { font-family: "Bahnschrift", "Segoe UI", sans-serif; font-weight: 700; }
+.pk-pack { border-radius: 6px; }
+.pk-sil { filter: brightness(0) drop-shadow(0 0 30px var(--glow)) drop-shadow(0 0 60px var(--glow)); }
+.pk-bg::before, .pk-bg::after { width: 22vmax; filter: blur(26px); }
+.pack-stage[data-mode="walkout"] .pk-bg::before, .pack-stage[data-mode="walkout"] .pk-bg::after,
+.pack-stage[data-mode="card"] .pk-bg::before, .pack-stage[data-mode="card"] .pk-bg::after { opacity: .28; }
