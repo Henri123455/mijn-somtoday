@@ -43,13 +43,15 @@ function effOvr(c, slot, chem) {
   const pen = exact ? 0 : fits ? 4 : 12;
   return (c.ovr - pen) * (0.92 + 0.08 * (chem ?? 0) / 3);
 }
+// Plekken in de huidige opstelling met een van deze posities.
+const slotIds = (posList) => SLOTS.filter((s) => posList.includes(slotPos(s))).map((s) => s.id);
 function lineStrength(side) {
   const by = (ids) => ids.map((id) => side.eff[id]).filter((x) => x != null);
   const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 30);
   const off = side.out; // spelers met rood ontbreken
-  const att = avg(by(['LW', 'ST', 'RW', 'CM2']).filter((_, i) => !off.has(['LW', 'ST', 'RW', 'CM2'][i])));
-  const mid = avg(by(['CM1', 'CM2', 'CM3']));
-  const def = avg(by(['LB', 'CB1', 'CB2', 'RB']));
+  const att = avg(by(slotIds(['ST', 'LW', 'RW', 'CAM']).filter((id) => !off.has(id))));
+  const mid = avg(by(slotIds(['CM', 'CAM'])));
+  const def = avg(by(slotIds(['CB', 'LB', 'RB'])));
   const gk = side.eff.GK ?? 30;
   const short = off.size * 4; // elke rode kaart kost sterkte over het hele veld
   return { att: att - short, mid: mid - short, def: def - short, gk: gk - off.has('GK') * 20 };
@@ -153,7 +155,7 @@ function paintCrests() { document.querySelectorAll('#match .mx-crest').forEach((
 // Intro: de tegenstander komt binnen, kaart voor kaart.
 function intro() {
   const t = M.them;
-  const order = ['GK', 'LB', 'CB1', 'CB2', 'RB', 'CM1', 'CM2', 'CM3', 'LW', 'ST', 'RW'];
+  const order = [...SLOTS].sort((a, b) => b.y - a.y || a.x - b.x).map((s) => s.id);
   mxStage(`<div class="mx-intro ${M.isSuper ? 'super' : ''}">
     <div class="mx-intro-head">${crest(t)}<div><div class="mx-kicker">${M.isSuper ? 'Superwedstrijd' : 'Je tegenstander'}</div><h2>${esc(t.name)}</h2>
       <div class="mx-vs">Rating ${teamRating(Object.values(t.cards))} <span>vs</span> jouw team ${teamRating(Object.values(M.user.cards))}</div></div></div>
@@ -227,8 +229,8 @@ function minute() {
   // Kans?
   const chance = 0.14 * (1 / (1 + Math.exp(-(A.att - D.def) / 7))) * (M.isSuper && !attackSide.isUser ? 1.15 : 1);
   if (Math.random() < chance) {
-    const creator = pickPlayer(attackSide, ['CM1', 'CM2', 'CM3', 'LW', 'RW', 'LB', 'RB'], 2);
-    const shooter = pickPlayer(attackSide, ['ST', 'LW', 'RW', 'CM2', 'CM1', 'CM3'], 1);
+    const creator = pickPlayer(attackSide, slotIds(['CM', 'CAM', 'LW', 'RW', 'LB', 'RB']), 2);
+    const shooter = pickPlayer(attackSide, slotIds(['ST', 'LW', 'RW', 'CAM', 'CM']), 1);
     if (!shooter) return;
     attackSide.shots++;
     M.ball = attackSide === M.user ? 88 : 12;
@@ -255,7 +257,7 @@ function minute() {
   }
   // Overtreding?
   if (Math.random() < 0.085) {
-    const fouler = pickPlayer(defSide, ['CB1', 'CB2', 'LB', 'RB', 'CM1', 'CM3', 'CM2']);
+    const fouler = pickPlayer(defSide, slotIds(['CB', 'LB', 'RB', 'CM', 'CAM']));
     if (!fouler) return;
     const victim = pickPlayer(attackSide, ['LW', 'RW', 'ST', 'CM2']);
     const r = Math.random();

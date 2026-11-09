@@ -9,7 +9,7 @@
   const ready = !!(CFG.apiKey && CFG.projectId);
   const KEY = 'ut-cloud';
   const STAMP = 'ut-cloud-stamp';
-  const KEYS = ['pack-opened', 'ut-team', 'ut-coins', 'ut-paid', 'ut-sold', 'ut-bought', 'ut-buys', 'ut-matches', 'ut-econ', 'hw-done'];
+  const KEYS = ['pack-opened', 'ut-team', 'ut-form', 'ut-coins', 'ut-paid', 'ut-sold', 'ut-bought', 'ut-buys', 'ut-matches', 'ut-econ', 'hw-done'];
   const rd = (k, fb) => { try { const v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); } catch { return fb; } };
   const wr = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   let auth = rd(KEY, null);

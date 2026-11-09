@@ -243,7 +243,7 @@ function portrait(p, tier, size) {
   if (!src) return avatarSVG(p, p.kit[0], MOODS[tier], '');
   const f = typeof FACES !== 'undefined' && FACES[p.key];
   const face = f && f[0] != null ? ` data-f="${f.slice(0, 5).join(',')}"` : '';
-  return `<div class="fc-pic"><img class="fc-img${face ? ' faced' : ''}"${face} src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-key="${esc(p.key)}" data-tier="${tier}"></div>`;
+  return `<div class="fc-pic"><img class="fc-img${face ? ' faced' : ''}"${face} src="${esc(src)}" alt="" draggable="false" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-key="${esc(p.key)}" data-tier="${tier}"></div>`;
 }
 document.addEventListener('error', (e) => {
   const img = e.target;
@@ -315,13 +315,31 @@ new MutationObserver((list) => {
   for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1 && (n.classList?.contains('fc-card') || n.querySelector?.('.fc-name'))) paintCards(n);
 }).observe(document.body, { childList: true, subtree: true });
 
-// ---------- Je elftal (4-3-3) en wissels ----------
-const SLOTS = [
-  { id: 'LW', x: 17, y: 16 }, { id: 'ST', x: 50, y: 11 }, { id: 'RW', x: 83, y: 16 },
-  { id: 'CM1', pos: 'CM', x: 24, y: 40 }, { id: 'CM2', pos: 'CAM', x: 50, y: 36 }, { id: 'CM3', pos: 'CM', x: 76, y: 40 },
-  { id: 'LB', x: 12, y: 64 }, { id: 'CB1', pos: 'CB', x: 36, y: 67 }, { id: 'CB2', pos: 'CB', x: 64, y: 67 }, { id: 'RB', x: 88, y: 64 },
-  { id: 'GK', x: 50, y: 87 },
-];
+// ---------- Je elftal en wissels: kies je opstelling ----------
+// Elke plek heeft een id (waarop je speler bewaard wordt), een positie en een plek op het veld (x/y in %).
+const BACK4 = [{ id: 'LB', x: 12, y: 68 }, { id: 'CB1', pos: 'CB', x: 36, y: 71 }, { id: 'CB2', pos: 'CB', x: 64, y: 71 }, { id: 'RB', x: 88, y: 68 }];
+const GK = { id: 'GK', x: 50, y: 89 };
+const FORMATIONS = {
+  '4-3-3': [{ id: 'LW', x: 17, y: 19 }, { id: 'ST', x: 50, y: 15 }, { id: 'RW', x: 83, y: 19 },
+    { id: 'CM1', pos: 'CM', x: 24, y: 44 }, { id: 'CM2', pos: 'CAM', x: 50, y: 40 }, { id: 'CM3', pos: 'CM', x: 76, y: 44 }, ...BACK4, GK],
+  '4-4-2': [{ id: 'ST', x: 35, y: 16 }, { id: 'ST2', pos: 'ST', x: 65, y: 16 },
+    { id: 'LW', x: 11, y: 42 }, { id: 'CM1', pos: 'CM', x: 37, y: 45 }, { id: 'CM3', pos: 'CM', x: 63, y: 45 }, { id: 'RW', x: 89, y: 42 }, ...BACK4, GK],
+  '4-2-3-1': [{ id: 'ST', x: 50, y: 14 }, { id: 'LW', x: 14, y: 33 }, { id: 'CM2', pos: 'CAM', x: 50, y: 34 }, { id: 'RW', x: 86, y: 33 },
+    { id: 'CM1', pos: 'CM', x: 35, y: 53 }, { id: 'CM3', pos: 'CM', x: 65, y: 53 },
+    { id: 'LB', x: 11, y: 70 }, { id: 'CB1', pos: 'CB', x: 36, y: 73 }, { id: 'CB2', pos: 'CB', x: 64, y: 73 }, { id: 'RB', x: 89, y: 70 }, { id: 'GK', x: 50, y: 90 }],
+  '3-5-2': [{ id: 'ST', x: 35, y: 16 }, { id: 'ST2', pos: 'ST', x: 65, y: 16 },
+    { id: 'LW', x: 10, y: 42 }, { id: 'CM1', pos: 'CM', x: 31, y: 47 }, { id: 'CM2', pos: 'CAM', x: 50, y: 38 }, { id: 'CM3', pos: 'CM', x: 69, y: 47 }, { id: 'RW', x: 90, y: 42 },
+    { id: 'CB1', pos: 'CB', x: 24, y: 71 }, { id: 'CB3', pos: 'CB', x: 50, y: 73 }, { id: 'CB2', pos: 'CB', x: 76, y: 71 }, GK],
+  '5-3-2': [{ id: 'ST', x: 35, y: 16 }, { id: 'ST2', pos: 'ST', x: 65, y: 16 },
+    { id: 'CM1', pos: 'CM', x: 24, y: 42 }, { id: 'CM2', pos: 'CM', x: 50, y: 40 }, { id: 'CM3', pos: 'CM', x: 76, y: 42 },
+    { id: 'LB', x: 8, y: 64 }, { id: 'CB1', pos: 'CB', x: 29, y: 71 }, { id: 'CB3', pos: 'CB', x: 50, y: 73 }, { id: 'CB2', pos: 'CB', x: 71, y: 71 }, { id: 'RB', x: 92, y: 64 }, GK],
+  '4-1-2-1-2': [{ id: 'ST', x: 35, y: 14 }, { id: 'ST2', pos: 'ST', x: 65, y: 14 }, { id: 'CM2', pos: 'CAM', x: 50, y: 31 },
+    { id: 'CM1', pos: 'CM', x: 24, y: 45 }, { id: 'CM3', pos: 'CM', x: 76, y: 45 }, { id: 'CM4', pos: 'CM', x: 50, y: 55 },
+    { id: 'LB', x: 11, y: 70 }, { id: 'CB1', pos: 'CB', x: 36, y: 73 }, { id: 'CB2', pos: 'CB', x: 64, y: 73 }, { id: 'RB', x: 89, y: 70 }, { id: 'GK', x: 50, y: 90 }],
+};
+const FIVE_ROWS = new Set(['4-2-3-1', '4-1-2-1-2']);
+let formation = (() => { try { return FORMATIONS[localStorage.getItem('ut-form')] ? localStorage.getItem('ut-form') : '4-3-3'; } catch { return '4-3-3'; } })();
+let SLOTS = FORMATIONS[formation];
 const BENCH = ['B1', 'B2', 'B3', 'B4', 'B5'];
 const slotPos = (s) => s.pos || s.id;
 // Op welke posities een speler nog mag spelen (zonder chemie te verliezen: alleen de eigen positie telt als "in positie").
@@ -395,8 +413,44 @@ window.utTeamState = () => {
 };
 
 // Chemielijnen zoals in FC: tussen spelers die naast elkaar staan. Groen = sterke link, oranje = zwak, rood = geen.
-const LINKS = [['LW', 'ST'], ['ST', 'RW'], ['LW', 'CM1'], ['ST', 'CM2'], ['RW', 'CM3'], ['CM1', 'CM2'], ['CM2', 'CM3'], ['LB', 'CM1'], ['CB1', 'CM1'],
-  ['CB2', 'CM3'], ['RB', 'CM3'], ['LB', 'CB1'], ['CB1', 'CB2'], ['CB2', 'RB'], ['CB1', 'GK'], ['CB2', 'GK']];
+// Lijnen tussen spelers die dicht bij elkaar staan (werkt voor elke opstelling): elke speler met zijn 2-3 dichtste buren.
+function linksFor(slots) {
+  const d = (a, b) => Math.hypot(a.x - b.x, (a.y - b.y) * 1.1);
+  const set = new Map();
+  for (const a of slots) {
+    const near = slots.filter((b) => b !== a).sort((p, q) => d(a, p) - d(a, q));
+    near.slice(0, a.id === 'GK' ? 2 : 3).filter((b, i) => i < 2 || d(a, b) < 30)
+      .forEach((b) => set.set([a.id, b.id].sort().join('|'), [a.id, b.id]));
+  }
+  return [...set.values()];
+}
+let LINKS = linksFor(SLOTS);
+
+// Opstelling wisselen: spelers schuiven naar de best passende plek; wie er niet meer in past gaat naar de bank.
+function setFormation(name) {
+  if (!FORMATIONS[name] || name === formation) return;
+  loadTeam();
+  const owned = new Map(ownedCards().map((c) => [c.g.id, c]));
+  const players = SLOTS.map((s) => team[s.id]).filter((id) => owned.has(id));
+  for (const s of SLOTS) delete team[s.id];
+  formation = name;
+  SLOTS = FORMATIONS[name];
+  LINKS = linksFor(SLOTS);
+  try { localStorage.setItem('ut-form', name); } catch {}
+  const left = [...players];
+  for (const pass of ['exact', 'fit', 'any']) {
+    for (const s of SLOTS) {
+      if (team[s.id]) continue;
+      const i = left.findIndex((id) => { const p = owned.get(id).player.pos; return pass === 'any' || (pass === 'exact' ? inPosition(s, owned.get(id)) : FITS[slotPos(s)].includes(p)); });
+      if (i >= 0) team[s.id] = left.splice(i, 1)[0];
+    }
+  }
+  for (const id of left) { const b = BENCH.find((x) => !team[x]); if (b) team[b] = id; }
+  selectedSlot = null;
+  saveTeam();
+  renderTeam();
+}
+window.utSetFormation = setFormation;
 function linkStrength(a, b) {
   if (!a || !b) return 'n';
   const p = a.player, q = b.player;
@@ -433,6 +487,10 @@ function renderTeam() {
   $('#ut-count').textContent = `${Object.keys(cards).length}/11`;
   $('#ut-chem-bar').style.width = `${(st.chemTotal / 33) * 100}%`;
 
+  const fsel = $('#ut-form');
+  if (fsel && !fsel.options.length) { fsel.innerHTML = Object.keys(FORMATIONS).map((f) => `<option>${f}</option>`).join(''); fsel.addEventListener('change', (e) => setFormation(e.target.value)); }
+  if (fsel) fsel.value = formation;
+  document.querySelector('#ut .ut-pitch')?.classList.toggle('rows5', FIVE_ROWS.has(formation));
   $('#ut-pitch-slots').innerHTML = SLOTS.map((s) => {
     const c = cards[s.id];
     const dots = c ? `<div class="ut-chem" title="${chem[s.id]} chemie">${'<i class="on"></i>'.repeat(chem[s.id])}${'<i></i>'.repeat(3 - chem[s.id])}</div>` : '';

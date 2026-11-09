@@ -430,3 +430,25 @@ body.ut-drag-on { cursor: grabbing; user-select: none; }
 @media (max-width: 700px) { #ut .ut-views { width: 100%; } #ut .ut-views button { flex: 1; padding: 10px 8px; font-size: 11px; letter-spacing: .08em; } }
 .fc-img.faced { position: absolute; height: auto; max-width: none; object-fit: fill; transform: none; }
 .fc-pic { -webkit-mask-image: radial-gradient(80% 85% at 50% 42%, #000 60%, transparent 82%); mask-image: radial-gradient(80% 85% at 50% 42%, #000 60%, transparent 82%); }
+
+/* foto's in kaarten zijn nooit los te slepen; je sleept altijd de hele kaart */
+.fc-img, .pc-avatar { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+
+/* kruisje om een speler weg te halen: binnen de kaart, altijd goed zichtbaar */
+#ut .ut-remove { top: 4%; right: 4%; width: 22px; height: 22px; z-index: 5; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .5); font-weight: 900; line-height: 16px; }
+#ut .ut-pitch { overflow: visible; }
+#ut .ut-pitch > .ut-lines { overflow: hidden; }
+
+/* vijf rijen (4-2-3-1, 4-1-2-1-2): iets kleinere kaarten zodat ze niet overlappen */
+@media (min-width: 1000px) { #ut-team-view .ut-pitch.rows5 .fc-sm { font-size: clamp(2.4px, .9cqw, 6.4px); } }
+.ut-pitch.rows5 .fc-sm { font-size: clamp(2.4px, .98cqw, 6.4px); }
+
+/* opstelling kiezen */
+.ut-form-pick { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 6px 0 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .05); color: #dbe4f3; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+#ut .ut-form-pick select { height: 32px; border-radius: 8px; padding: 0 8px; font-weight: 800; letter-spacing: .04em; background: #0b1324; color: #fff; border: 1px solid rgba(34, 227, 164, .5); }
+
+/* munten: net zo groot als de andere waarden, met een echte munt */
+.ut-stat b .coin { width: .8em; height: .8em; margin-right: .25em; vertical-align: -.05em; }
+.ut-stat b .tm-coins-value { font-size: inherit; font-weight: 900; color: #f3d27a; font-variant-numeric: tabular-nums; }
+.ut-stat:has(.tm-coins-value) { padding: 6px 14px; border-radius: 12px; background: linear-gradient(180deg, rgba(243, 198, 77, .14), rgba(243, 198, 77, .04)); border: 1px solid rgba(243, 198, 77, .3); }
