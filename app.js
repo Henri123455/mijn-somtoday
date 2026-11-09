@@ -130,14 +130,13 @@ function renderGradeTable() {
   });
   $('#gt-count').textContent = `${list.length} van ${grades.length}`;
   $('#grade-table tbody').innerHTML = list.map((g) => `
-    <tr data-vc="${VAK_COLORS[hashVak(g.vak) % VAK_COLORS.length]}">
+    <tr class="gt-row ${g.cijfer == null ? 'neutral' : g.cijfer < 5.5 ? 'bad' : g.cijfer < 6 ? 'warn' : 'good'}">
       <td class="nowrap gt-d">${g.datum && !g.vorigJaar ? new Date(g.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' }) : '<span class="gt-badge">vorig jaar</span>'}</td>
       <td class="gt-v"><span class="gt-vak">${vakIcon(g.vak)} ${esc(g.vak)}</span></td>
       <td class="gt-t">${esc(g.omschrijving)}</td>
       <td class="num gt-w">${g.weging > 0 ? `<span class="gt-weight">${g.weging}×</span>` : '<span class="hint">telt niet</span>'}</td>
       <td class="num gt-c"><span class="gt-grade ${g.cijfer == null ? '' : g.cijfer < 5.5 ? 'bad' : g.cijfer < 6 ? 'warn' : 'good'}">${esc(g.resultaat)}</span></td>
     </tr>`).join('') || '<tr><td colspan="5" class="hint">Geen cijfers gevonden.</td></tr>';
-  document.querySelectorAll('#grade-table tbody tr[data-vc]').forEach((tr) => tr.style.setProperty('--vc', tr.dataset.vc));
 }
 function hashVak(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
 $('#grade-table thead').addEventListener('click', (e) => {

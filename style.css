@@ -1030,3 +1030,8 @@ input.switch:focus-visible { outline: 3px solid var(--accent-soft); outline-offs
 .cl-chip.line i { width: 14px; height: 3px; border-radius: 2px; box-shadow: none; }
 .cl-chip:hover { background: color-mix(in srgb, var(--c, var(--accent)) 22%, transparent); }
 .cl-chip.off { opacity: .4; text-decoration: line-through; }
+/* rijen: overal hetzelfde lichtblauw; de streep links heeft de kleur van het cijfer */
+.grade-table tbody tr.gt-row { --vc: var(--accent); background: color-mix(in srgb, #3b82f6 7%, var(--card)); }
+.grade-table tbody tr.gt-row:hover { background: color-mix(in srgb, #3b82f6 13%, var(--card)); }
+.grade-table tbody tr.gt-row.good { --vc: var(--good); } .grade-table tbody tr.gt-row.warn { --vc: var(--warn); }
+.grade-table tbody tr.gt-row.bad { --vc: var(--bad); } .grade-table tbody tr.gt-row.neutral { --vc: #94a3b8; }
