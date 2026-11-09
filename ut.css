@@ -89,7 +89,7 @@
 .fc-lg { font-size: 17px; }
 .fc-md { font-size: 10.5px; }
 .fc-sm { font-size: 6.2px; }
-.fc-sm .fc-stats, .fc-sm .fc-foot, .fc-sm .fc-crest { display: none; }
+.fc-sm .fc-stats { display: none; }
 .fc-sm .fc-name { font-size: 1.45em; top: 8.25em; height: 1.55em; left: .25em; right: .25em; border: 0; }
 .fc-sm .fc-ovr { font-size: 3.6em; }
 .fc-sm .fc-pos { font-size: 1.3em; }
@@ -310,3 +310,32 @@ body.match-open { overflow: hidden; }
 .fc-foot { justify-content: center; }
 .fc-vak { font-size: 1.05em; }
 .fc-crest.social { width: 1.8em; height: 1.95em; }
+
+/* ---------- Club voluit onder het vak (in je team) ---------- */
+.fc-club { display: none; }
+.fc-sm .fc-club { display: flex; position: absolute; left: 1.4em; right: 1.4em; top: 13.6em; height: 1.4em; font-size: 1.2em; align-items: center; justify-content: center;
+  font-weight: 700; white-space: nowrap; opacity: .85; letter-spacing: .02em; }
+.fc-sm .fc-crest { width: 2.6em; height: 3em; }
+.fc-sm .fc-crest.social { width: 2.6em; height: 2.8em; }
+.fc-vak { overflow: visible; text-overflow: clip; }
+
+/* ---------- Mooiere kaartachtergrond ---------- */
+/* Metallic glans, een lichtbundel achter de speler, fijne diagonale lijnen en een zeshoekpatroon onderin. */
+.fc-card:is([data-tier="gold"], [data-tier="rare"], [data-tier="silver"], [data-tier="bronze"]) .fc-bg::after {
+  background:
+    radial-gradient(70% 38% at 66% 26%, rgba(255, 255, 255, .55), transparent 70%),
+    linear-gradient(115deg, transparent 0 30%, rgba(255, 255, 255, .22) 38%, transparent 46%, transparent 60%, rgba(255, 255, 255, .14) 66%, transparent 72%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .07) 0 .12em, transparent .12em .7em),
+    radial-gradient(120% 60% at 50% 115%, rgba(0, 0, 0, .28), transparent 60%),
+    linear-gradient(165deg, var(--fc-a) 0%, var(--fc-b) 52%, var(--fc-c) 100%);
+}
+.fc-card[data-tier="rare"] .fc-bg::after {
+  background:
+    radial-gradient(70% 38% at 66% 26%, rgba(255, 255, 255, .7), transparent 70%),
+    conic-gradient(from 200deg at 66% 28%, transparent 0 8%, rgba(255, 255, 255, .18) 10% 13%, transparent 15% 30%, rgba(255, 255, 255, .14) 32% 35%, transparent 37% 52%, rgba(255, 255, 255, .16) 54% 57%, transparent 59%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 .12em, transparent .12em .7em),
+    radial-gradient(120% 60% at 50% 115%, rgba(60, 30, 0, .3), transparent 60%),
+    linear-gradient(165deg, var(--fc-a) 0%, var(--fc-b) 52%, var(--fc-c) 100%);
+}
+.fc-bg { background: linear-gradient(155deg, color-mix(in srgb, var(--fc-a) 70%, #fff), var(--fc-c) 70%, color-mix(in srgb, var(--fc-c) 70%, #000)); }
+.fc-card[data-tier="red"] .fc-bg::after { background: radial-gradient(70% 38% at 66% 26%, rgba(255, 200, 200, .4), transparent 70%), repeating-linear-gradient(135deg, rgba(0, 0, 0, .1) 0 .14em, transparent .14em .7em), linear-gradient(165deg, var(--fc-a), var(--fc-b) 55%, var(--fc-c)); }

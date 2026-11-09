@@ -54,8 +54,8 @@ function vakKort(vak) {
   const v = String(vak || '').toLowerCase();
   const map = [
     [/nederlands/, 'Nederlands'], [/engels/, 'Engels'], [/duits/, 'Duits'], [/frans/, 'Frans'], [/spaans/, 'Spaans'],
-    [/culturele|ckv/, 'CKV'], [/lichamelijke/, 'Gym (LO)'], [/bedrijfseconomie/, 'Bedrijfsec.'],
-    [/maatschappijwetenschappen/, 'Maatschappijwet.'], [/levensbeschouwing/, 'Levensbesch.'],
+    [/culturele|ckv/, 'Kunst en cultuur'], [/lichamelijke/, 'Lichamelijke opvoeding'], [/bedrijfseconomie/, 'Bedrijfseconomie'],
+    [/maatschappijwetenschappen/, 'Maatschappijwetenschappen'], [/levensbeschouwing/, 'Levensbeschouwing'],
   ];
   return (map.find(([re]) => re.test(v)) || [null, vak ? vak.charAt(0).toUpperCase() + vak.slice(1) : ''])[1];
 }
@@ -242,8 +242,11 @@ function cardHTML(c, size = 'md') {
   const nameSize = Math.max(0.6, Math.min(1.08, room / (p.naam.length * 0.62))).toFixed(2);
   const cijfer = g.transfer ? '' : String(g.resultaat || (g.cijfer != null ? String(g.cijfer).replace('.', ',') : ''));
   const gcls = g.cijfer == null ? '' : g.cijfer >= 8 ? 'top' : g.cijfer >= 5.5 ? 'ok' : 'bad';
-  const foot = g.transfer ? (g.vak === '' ? '' : '<span class="fc-vak">Transfermarkt</span>')
-    : `<span class="fc-vak">${esc(vakKort(g.vak))}</span>`;
+  // Geen afkortingen: lange namen worden kleiner geschreven zodat ze passen.
+  const fit = (text, room) => Math.max(0.5, Math.min(1, room / (String(text).length * 0.62))).toFixed(2);
+  const vakNaam = g.transfer ? 'Transfermarkt' : vakKort(g.vak);
+  const foot = g.transfer && g.vak === '' ? '' : `<span class="fc-vak" data-size="${fit(vakNaam, size === 'sm' ? 6.8 : 9)}">${esc(vakNaam)}</span>`;
+  const clubNaam = CLUBS[p.club]?.[0] || '';
   return `<div class="fc-card fc-${size}" data-tier="${c.tier.id}">
     <div class="fc-bg"></div><div class="fc-shine"></div>
     <div class="fc-inner">
@@ -256,13 +259,14 @@ function cardHTML(c, size = 'md') {
       <div class="fc-name"><span data-size="${nameSize}">${esc(p.naam)}</span></div>
       <div class="fc-stats">${c.stats.map((v, i) => `<div><b>${v}</b><span>${labels[i]}</span></div>`).join('')}</div>
       ${foot ? `<div class="fc-foot">${foot}</div>` : ''}
+      ${clubNaam ? `<div class="fc-club"><span data-size="${fit(clubNaam, size === 'sm' ? 10 : 13)}">${esc(clubNaam)}</span></div>` : ''}
 
     </div>
   </div>`;
 }
 
 function paintCards(root = document) {
-  root.querySelectorAll('.fc-name span[data-size]').forEach((el) => { el.style.fontSize = el.dataset.size + 'em'; });
+  root.querySelectorAll('.fc-card [data-size]').forEach((el) => { el.style.fontSize = el.dataset.size + 'em'; });
 }
 // Lichtgewicht: alleen nieuw toegevoegde kaarten verwerken (geen hele pagina doorzoeken bij elke wijziging).
 new MutationObserver((list) => {

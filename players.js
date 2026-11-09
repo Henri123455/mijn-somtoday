@@ -302,9 +302,45 @@ const SOCIAL_ICON = {
   X: '<rect x="1" y="2" width="22" height="22" rx="5" fill="#000"/><path d="M6.5 7 L17.5 19 M17.5 7 L6.5 19" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
   TWT: '<path d="M4 3 H21 V15 L16 20 H12 L9 23 V20 H4 Z" fill="#9146ff"/><path d="M10 8 V13 M15 8 V13" stroke="#fff" stroke-width="2"/>',
 };
+// Clublogo's: eigen tekening in clubkleuren (geen echte logo's), maar per club een herkenbare vorm en patroon.
+const CREST_STYLE = {
+  AJA: 'shield bandv', PSV: 'shield stripes', FEY: 'shield halves', AZ: 'shield plain', TWE: 'round plain', UTR: 'shield hband', NEC: 'shield halves',
+  BAR: 'shield stripes', RMA: 'round ring', ATM: 'shield stripes', MCI: 'round ring', LIV: 'shield plain', ARS: 'round plain', CHE: 'round ring',
+  MUN: 'round plain', TOT: 'shield plain', NEW: 'round stripes', AVL: 'shield hband', JUV: 'shield stripes', INT: 'round ring', MIL: 'shield stripes',
+  NAP: 'round ring', BAY: 'round ring', BVB: 'round ring', B04: 'shield plain', PSG: 'round bandv', OM: 'shield plain', BEN: 'round ring', POR: 'shield plain',
+  SCP: 'shield hband', GAL: 'shield halves', FEN: 'shield hband', ATA: 'shield stripes', ROM: 'shield plain', ICON: 'star', ITT: 'round stripes',
+};
+const CREST_ABBR = { AJA: 'AFC', BAR: 'FCB', RMA: 'RM', MCI: 'MCFC', MUN: 'MU', LIV: 'LFC', ARS: 'AFC', CHE: 'CFC', BAY: 'FCB', BVB: 'BVB', PSG: 'PSG',
+  JUV: 'J', INT: 'IM', MIL: 'ACM', TOT: 'THFC', NEW: 'NUFC', ATM: 'ATM', FEY: 'FEY', TWE: 'FCT', UTR: 'FCU', NAP: 'N', ROM: 'ASR', B04: 'B04' };
+let crestSeq = 0;
 function crestSVG(club) {
   if (SOCIAL_ICON[club]) return `<svg viewBox="0 0 24 26" class="fc-crest social" aria-hidden="true">${SOCIAL_ICON[club]}</svg>`;
   const c = CLUBS[club] || CLUBS.ICON;
-  const short = club === 'ICON' ? '★' : club === 'BN' ? 'BN' : club.slice(0, 3);
-  return `<svg viewBox="0 0 24 28" class="fc-crest" aria-hidden="true"><path d="M12 1 L22 4 L22 13 C22 20 17 24.5 12 27 C7 24.5 2 20 2 13 L2 4 Z" fill="${c[2]}" stroke="${c[3]}" stroke-width="2"/><text x="12" y="17" font-size="${short.length > 2 ? 6.6 : 8}" font-weight="900" text-anchor="middle" fill="${c[3]}" font-family="Segoe UI, Arial, sans-serif">${short}</text></svg>`;
+  const id = 'cr' + (++crestSeq);
+  const [a, b] = [c[2], c[3]];
+  const style = (CREST_STYLE[club] || ['shield plain', 'shield sash', 'round ring', 'shield stripes', 'shield hband', 'round plain'][hashOf(club) % 6]).split(' ');
+  if (style[0] === 'star') {
+    return `<svg viewBox="0 0 24 28" class="fc-crest" aria-hidden="true"><circle cx="12" cy="14" r="11" fill="#1b1407" stroke="#d9b45a" stroke-width="1.6"/><path d="M12 6.5 L14.2 11.3 L19.4 11.8 L15.5 15.3 L16.6 20.4 L12 17.8 L7.4 20.4 L8.5 15.3 L4.6 11.8 L9.8 11.3 Z" fill="#f3d27a"/></svg>`;
+  }
+  const round = style[0] === 'round';
+  const shape = round ? '<circle cx="12" cy="14" r="10.6"/>' : '<path d="M12 1.4 L22.4 4.2 L22.4 13 C22.4 20 17.4 24.5 12 26.8 C6.6 24.5 1.6 20 1.6 13 L1.6 4.2 Z"/>';
+  const pat = {
+    plain: '',
+    stripes: [4, 12, 20].map((x) => `<rect x="${x - 2}" y="0" width="4" height="28" fill="${b}"/>`).join(''),
+    halves: `<rect x="12" y="0" width="12" height="28" fill="${b}"/>`,
+    bandv: `<rect x="8.5" y="0" width="7" height="28" fill="${b}"/>`,
+    hband: `<rect x="0" y="11" width="24" height="6" fill="${b}"/>`,
+    sash: `<path d="M-2 6 L6 -2 L26 20 L18 28 Z" fill="${b}"/>`,
+    ring: `<circle cx="12" cy="14" r="7.4" fill="none" stroke="${b}" stroke-width="1.6"/>`,
+  }[style[1]] || '';
+  const abbr = CREST_ABBR[club] || club.slice(0, 3);
+  const fs = abbr.length > 3 ? 4.6 : abbr.length === 3 ? 5.6 : 7.4;
+  const plate = style[1] === 'plain' || style[1] === 'ring' ? '' : `<rect x="${12 - abbr.length * 2.1 - 1.4}" y="${round ? 10.6 : 9.6}" width="${abbr.length * 4.2 + 2.8}" height="7.2" rx="1.6" fill="rgba(0,0,0,.45)"/>`;
+  const tx = style[1] === 'plain' || style[1] === 'ring' ? b : '#fff';
+  return `<svg viewBox="0 0 24 28" class="fc-crest" aria-hidden="true">
+    <defs><clipPath id="${id}">${shape}</clipPath><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>
+    <g clip-path="url(#${id})"><rect width="24" height="28" fill="${a}"/>${pat}<rect width="24" height="28" fill="url(#${id}g)"/></g>
+    ${shape.replace('/>', ` fill="none" stroke="#d9b45a" stroke-width="1.3"/>`)}
+    ${plate}<text x="12" y="${round ? 16.3 : 15.3}" font-size="${fs}" font-weight="900" text-anchor="middle" fill="${tx}" font-family="Segoe UI, Arial, sans-serif" letter-spacing="-.2">${abbr}</text>
+  </svg>`;
 }
