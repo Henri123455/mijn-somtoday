@@ -1070,3 +1070,12 @@ input.switch:focus-visible { outline: 3px solid var(--accent-soft); outline-offs
 .pk-bg::before, .pk-bg::after { width: 22vmax; filter: blur(26px); }
 .pack-stage[data-mode="walkout"] .pk-bg::before, .pack-stage[data-mode="walkout"] .pk-bg::after,
 .pack-stage[data-mode="card"] .pk-bg::before, .pack-stage[data-mode="card"] .pk-bg::after { opacity: .28; }
+
+/* je cijfer verschijnt pas aan het eind van de walkout */
+.pk-grade-end { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 10px; }
+.pk-grade-end[hidden] { display: none; }
+.pk-grade-end span { font: 700 13px/1 "Bahnschrift", "Segoe UI", sans-serif; letter-spacing: .3em; text-transform: uppercase; color: rgba(255, 255, 255, .75); }
+.pk-grade-end .pk-grade { margin-top: 8px; animation: pk-grade-pop .55s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes pk-grade-pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.pk-player-grade { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; font: 700 15px/1 "Bahnschrift", "Segoe UI", sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.pk-player-grade .pk-grade { margin: 0; padding: 4px 12px; font-size: 22px; animation: none; }

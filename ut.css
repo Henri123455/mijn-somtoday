@@ -499,3 +499,43 @@ body.ut-drag-on { cursor: grabbing; user-select: none; }
 #ut .ut-stat b .coin::after { content: "S"; position: absolute; inset: 0; display: grid; place-items: center; font: 900 11px/1 "Bahnschrift", "Segoe UI", sans-serif; color: #8a6106; text-shadow: 0 1px 0 rgba(255, 240, 180, .7); }
 #ut .ut-stat b .tm-coins-value { letter-spacing: .02em; }
 @media (max-width: 700px) { #ut .ut-stat b .coin { width: 16px; height: 16px; } #ut .ut-stat b .coin::after { font-size: 8px; } #ut .ut-stat:has(.tm-coins-value) b { gap: 5px; } }
+
+/* ---------- Duidelijkere tekst op de kaarten ---------- */
+.fc-ovr { font-weight: 900; text-shadow: 0 .04em 0 rgba(255, 255, 255, .25), 0 .05em .12em rgba(0, 0, 0, .25); }
+.fc-pos { font-weight: 800; }
+.fc-name span { font-size: 1.22em; font-weight: 900; letter-spacing: .03em; text-shadow: 0 .06em .14em rgba(0, 0, 0, .28); }
+.fc-stats { left: 1.4em; right: 1.4em; }
+.fc-stats b { font-size: 1.42em; font-weight: 900; }
+.fc-stats span { font-size: .74em; font-weight: 800; opacity: .9; letter-spacing: .06em; }
+.fc-md .fc-foot, .fc-lg .fc-foot { left: 2.1em; right: 2.1em; height: 2.15em; }
+.fc-vak { letter-spacing: .02em; font-weight: 900; }
+.fc-foot .fc-vak { text-shadow: 0 .05em .12em rgba(0, 0, 0, .3); }
+.fc-sm .fc-name span { font-size: 1.12em; }
+.fc-sm .fc-foot { left: 1em; right: 1em; height: 1.75em; }
+.fc-sm .fc-club span { font-size: 1.08em; }
+.fc-stats { top: 13.3em; row-gap: .12em; }
+.fc-stats b { font-size: 1.3em; line-height: 1; }
+.fc-stats span { font-size: .68em; line-height: 1.15; }
+.fc-md .fc-foot, .fc-lg .fc-foot { bottom: 1.55em; height: 2em; }
+.fc-card .fc-foot { background: rgba(10, 14, 24, .55) !important; box-shadow: inset 0 0 0 .07em rgba(255, 255, 255, .22); }
+.fc-card .fc-foot .fc-vak { color: #fff; }
+
+/* ---------- Mijn club: kop met filter en sorteren, rustigere lijst ---------- */
+#ut .ut-club-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+#ut .ut-club-head h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-family: "Bahnschrift", "Segoe UI", sans-serif; letter-spacing: .04em; text-transform: uppercase; font-size: 16px; }
+#ut .ut-count-pill { font-size: 11px; font-weight: 800; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; background: rgba(34, 227, 164, .14); color: #7ff3cb; border: 1px solid rgba(34, 227, 164, .35); text-transform: none; }
+#ut .ut-club-tools { display: flex; gap: 6px; }
+#ut .ut-club-tools select, #ut .ut-form-pick select { height: 32px; padding: 0 28px 0 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .16); background-color: #0b1324; color: #e8eefb;
+  font: 700 12px "Bahnschrift", "Segoe UI", sans-serif; letter-spacing: .03em; cursor: pointer; }
+#ut .ut-club-tools select:hover, #ut .ut-club-tools select:focus { border-color: #22e3a4; outline: none; }
+#ut .ut-club { gap: 10px; padding: 4px 2px 10px; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
+#ut .ut-club-card { transition: transform .15s ease, filter .15s ease; border-radius: 14px; }
+#ut .ut-club-card:hover { transform: translateY(-3px); background: none !important; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .45)); }
+#ut .ut-club-card.in-team { opacity: .45; filter: saturate(.6); }
+#ut .ut-club-card.in-team:hover { opacity: .75; }
+#ut .ut-club-card.fits { border-color: transparent !important; filter: drop-shadow(0 0 10px rgba(34, 227, 164, .65)); }
+#ut .ut-badge { top: 6px; right: 6px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+#ut .ut-side.card { background: linear-gradient(180deg, rgba(20, 30, 52, .92), rgba(11, 17, 31, .95)); border: 1px solid rgba(255, 255, 255, .08); }
+#ut .ut-bench-title { letter-spacing: .2em; font-weight: 800; color: #9fb0cc; }
+@media (max-width: 700px) { #ut .ut-club-tools { width: 100%; } #ut .ut-club-tools select { flex: 1; } }
+.fc-md .fc-foot, .fc-lg .fc-foot { bottom: 2.7em; height: 1.95em; left: 2.6em; right: 2.6em; }

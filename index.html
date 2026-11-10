@@ -217,9 +217,12 @@
         </div>
         <div class="ut-bench-wrap"><span class="ut-bench-title">Wisselbank</span><div id="ut-bench" class="ut-bench"></div></div>
         <div class="ut-side card">
-          <div class="row-between">
-            <h2>Mijn club <span id="ut-club-count" class="hint"></span></h2>
-            <select id="ut-filter"></select>
+          <div class="ut-club-head">
+            <h2>Mijn club <span id="ut-club-count" class="ut-count-pill"></span></h2>
+            <div class="ut-club-tools">
+              <select id="ut-filter" aria-label="Vak"></select>
+              <select id="ut-sort" aria-label="Sorteren"><option value="rating">Hoogste rating</option><option value="positie">Positie</option><option value="vak">Vak</option></select>
+            </div>
           </div>
           <p id="ut-hint" class="hint"></p>
           <p id="ut-photo-msg" class="hint" aria-live="polite"></p>

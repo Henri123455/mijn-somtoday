@@ -598,12 +598,17 @@ async function loadSchedule() {
     if (fromCache) { weekCache = cached; renderDayTabs(days); renderDay(days[dayIndex]); }
     else $('#day-list').innerHTML = '<div class="mgd-empty">Laden…</div>';
     try {
-      const [s, hw] = await Promise.all([
-        api(`/api/schedule?week=${key}`),
-        api(`/api/homework?week=${key}`).catch(() => ({ items: [] })),
-      ]);
+      // Het rooster tonen zodra het er is; het huiswerk komt er daarna bij.
+      const hwReq = api(`/api/homework?week=${key}`).catch(() => ({ items: null }));
+      const s = await api(`/api/schedule?week=${key}`);
       if (ymdLocal(weekDays()[0]) !== key) return; // intussen naar een andere week gegaan
-      weekCache = { key, lessons: s.items, homework: hw.items };
+      const oldHw = fromCache ? weekCache.homework : [];
+      weekCache = { key, lessons: s.items, homework: oldHw || [] };
+      renderDayTabs(days);
+      renderDay(weekDays()[dayIndex]);
+      const hw = await hwReq;
+      if (weekCache.key !== key) return;
+      weekCache = { key, lessons: s.items, homework: hw.items || oldHw || [] };
       if (!s.demo && weekOffset === (((new Date().getDay() + 6) % 7) > 4 ? 1 : 0)) try { localStorage.setItem('cache-week', JSON.stringify(weekCache)); } catch {}
       window.notifyCheck?.('rooster', weekCache);
     } catch (err) {

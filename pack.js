@@ -194,17 +194,21 @@ function showFlare() {
   later(showVak, walk ? 1900 : 1000);
 }
 
-// 3. Het vak en je cijfer
+// Je cijfer als tekst en kleur; dit komt pas aan het eind van de animatie in beeld.
+function gradeOf(g) {
+  const cijfer = g.resultaat || (g.cijfer != null ? String(g.cijfer).replace('.', ',') : '');
+  const cls = g.cijfer == null ? '' : g.cijfer >= 8 ? 'top' : g.cijfer >= 5.5 ? 'ok' : 'bad';
+  return { cijfer, cls };
+}
+
+// 3. Het vak (je cijfer blijft nog geheim)
 function showVak() {
   step = 'vak';
   const g = current.g;
-  const cijfer = g.resultaat || (g.cijfer != null ? String(g.cijfer).replace('.', ',') : '');
-  const cls = g.cijfer == null ? '' : g.cijfer >= 8 ? 'top' : g.cijfer >= 5.5 ? 'ok' : 'bad';
   stage(`
     <div class="pk-reveal">
       <div class="pk-label">VAK</div>
       <div class="pk-big-text">${esc(vakKort(g.vak))}</div>
-      ${cijfer ? `<div class="pk-grade ${cls}">${esc(cijfer)}</div>` : ''}
       <div class="pk-sub">${esc(g.omschrijving || 'Toets')}${g.weging ? ` · weging ${g.weging}` : ''}</div>
     </div>`, 'walkout', current.tier.id);
   sfx.tick();
@@ -260,18 +264,24 @@ function showSilhouette() {
     <div class="pk-reveal pk-sil-wrap">
       <div class="pk-sil">${avatarSVG(c.player, '#000', 'lach', '')}</div>
       <div class="pk-count">0</div>
+      <div class="pk-grade-end" hidden></div>
     </div>`, 'walkout', c.tier.id);
   const out = el.querySelector('.pk-count');
+  const end = el.querySelector('.pk-grade-end');
+  const { cijfer, cls } = gradeOf(c.g);
   const start = performance.now();
   const dur = WALKOUT.includes(c.tier.id) ? 1500 : 900;
-  const tick = (t) => {
+  const tick = () => {
     if (!out.isConnected) return;
-    const k = Math.min(1, (t - start) / dur);
+    const k = Math.min(1, (performance.now() - start) / dur);
     out.textContent = Math.round(c.ovr * (1 - Math.pow(1 - k, 3)));
-    if (k < 1) requestAnimationFrame(tick); else sfx.tick();
+    if (k < 1) return setTimeout(tick, 16);
+    sfx.tick();
+    // Pas nu, helemaal aan het eind: je cijfer.
+    if (cijfer) { end.innerHTML = `<span>Je cijfer</span><b class="pk-grade ${cls}">${esc(cijfer)}</b>`; end.hidden = false; }
   };
-  requestAnimationFrame(tick);
-  later(showCard, dur + 1200);
+  setTimeout(tick, 16);
+  later(showCard, dur + (cijfer ? 2200 : 1200));
 }
 
 // 5. De kaart: eerst de achterkant, dan omdraaien
@@ -288,6 +298,7 @@ function showCard() {
     <div class="pk-player">
       <div class="pk-player-name">${esc(c.player.naam)}</div>
       <div class="pk-player-bio">${esc(CLUBS[c.player.club]?.[0] || '')} · ${esc(NATIONS[c.player.nat] || c.player.nat)}</div>
+      ${gradeOf(c.g).cijfer ? `<div class="pk-player-grade">${esc(vakKort(c.g.vak))} <b class="pk-grade ${gradeOf(c.g).cls}">${esc(gradeOf(c.g).cijfer)}</b></div>` : ''}
     </div>
     <p class="pk-sentence"></p>
     <p class="pk-reward" hidden></p>

@@ -260,14 +260,14 @@ function cardHTML(c, size = 'md') {
   const p = c.player;
   const g = c.g;
   const labels = p.pos === 'GK' ? GK_LABELS : STAT_LABELS;
-  const room = size === 'sm' ? 9.6 : 12.4;
-  const nameSize = Math.max(0.6, Math.min(1.08, room / (p.naam.length * 0.62))).toFixed(2);
+  const room = size === 'sm' ? 10.4 : 12.4;
+  const nameSize = Math.max(0.62, Math.min(size === 'sm' ? 1.12 : 1.28, room / (p.naam.length * 0.6))).toFixed(2);
   const cijfer = g.transfer ? '' : String(g.resultaat || (g.cijfer != null ? String(g.cijfer).replace('.', ',') : ''));
   const gcls = g.cijfer == null ? '' : g.cijfer >= 8 ? 'top' : g.cijfer >= 5.5 ? 'ok' : 'bad';
   // Geen afkortingen: lange namen worden kleiner geschreven zodat ze passen.
   const fit = (text, room) => Math.max(0.5, Math.min(1, room / (String(text).length * 0.62))).toFixed(2);
   const vakNaam = g.transfer ? 'Transfermarkt' : vakKort(g.vak);
-  const foot = g.transfer && g.vak === '' ? '' : `<span class="fc-vak" data-size="${fit(vakNaam, size === 'sm' ? 6.8 : 9)}">${esc(vakNaam)}</span>`;
+  const foot = g.transfer && g.vak === '' ? '' : `<span class="fc-vak" data-size="${fit(vakNaam, size === 'sm' ? 9 : 12.5)}">${esc(vakNaam)}</span>`;
   const clubNaam = CLUBS[p.club]?.[0] || '';
   return `<div class="fc-card fc-${size}" data-tier="${c.tier.id}">
     <div class="fc-bg"></div><div class="fc-shine"></div>
@@ -352,6 +352,7 @@ const inPosition = (s, c) => c.player.pos === slotPos(s) || (slotPos(s) === 'CAM
 let team = {};
 let selectedSlot = null;
 let clubFilter = '';
+let clubSort = (() => { try { return ['rating', 'vak', 'positie'].includes(localStorage.getItem('ut-sort')) ? localStorage.getItem('ut-sort') : 'rating'; } catch { return 'rating'; } })();
 const loadTeam = () => { try { team = JSON.parse(localStorage.getItem('ut-team') || '{}'); } catch { team = {}; } };
 const saveTeam = () => { try { localStorage.setItem('ut-team', JSON.stringify(team)); } catch {} window.cloudSave?.(); };
 
@@ -517,7 +518,14 @@ function renderTeam() {
   const inTeam = new Set(Object.values(team));
   const slot = SLOTS.find((s) => s.id === selectedSlot);
   const want = slot ? slotPos(slot) : null;
-  const list = owned.filter((c) => !sel.value || (c.g.transfer ? 'Transfermarkt' : c.g.vak) === sel.value);
+  const POS_ORDER = ['GK', 'LB', 'CB', 'RB', 'CM', 'CAM', 'LW', 'RW', 'ST'];
+  const sorters = {
+    rating: (a, b) => b.ovr - a.ovr,
+    vak: (a, b) => (a.g.vak || '').localeCompare(b.g.vak || '') || b.ovr - a.ovr,
+    positie: (a, b) => POS_ORDER.indexOf(a.player.pos) - POS_ORDER.indexOf(b.player.pos) || b.ovr - a.ovr,
+  };
+  const list = owned.filter((c) => !sel.value || (c.g.transfer ? 'Transfermarkt' : c.g.vak) === sel.value)
+    .sort((a, b) => (want ? (b.player.pos === want) - (a.player.pos === want) : 0) || (inTeam.has(a.g.id) - inTeam.has(b.g.id)) || sorters[clubSort](a, b));
   $('#ut-club-count').textContent = `${owned.length} ${owned.length === 1 ? 'kaart' : 'kaarten'}`;
   $('#ut-hint').textContent = selectedSlot
     ? (want ? `Kies een ${POS_NAMES[want] || want}. Alleen op zijn eigen positie krijgt een speler chemie.` : 'Kies een wissel voor op de bank.')
@@ -591,6 +599,8 @@ function onSlotClick(e) {
 }
 $('#ut-club').addEventListener('click', (e) => { const card = e.target.closest('[data-card]'); if (card) placeCard(card.dataset.card); });
 $('#ut-filter').addEventListener('change', (e) => { clubFilter = e.target.value; renderTeam(); });
+$('#ut-sort').value = clubSort;
+$('#ut-sort').addEventListener('change', (e) => { clubSort = e.target.value; try { localStorage.setItem('ut-sort', clubSort); } catch {} renderTeam(); });
 $('#ut-auto').addEventListener('click', autoTeam);
 $('#ut-clear').addEventListener('click', () => { team = {}; selectedSlot = null; saveTeam(); renderTeam(); });
 

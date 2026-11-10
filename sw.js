@@ -1,5 +1,5 @@
 // Bewaart de app-bestanden, zodat de app ook zonder internet opent. Somtoday zelf gaat altijd via internet.
-const CACHE = 'mijn-somtoday-1.9.1-mwaypg7m';
+const CACHE = 'mijn-somtoday-1.9.2-mwazdbqb';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(
