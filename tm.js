@@ -186,6 +186,7 @@ $('#ut-views').addEventListener('click', (e) => {
   $('#ut-team-view').hidden = view !== 'team';
   $('#ut-market-view').hidden = view !== 'markt';
   $('#ut-match-view').hidden = view !== 'match';
+  document.querySelector('#ut .ut-actions').hidden = view !== 'team';
   if (view === 'markt') renderMarket();
   else if (view === 'match') window.renderMatches?.();
   else window.renderTeam?.();

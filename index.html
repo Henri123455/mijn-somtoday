@@ -167,7 +167,7 @@
     <!-- Ultimate Team -->
     <section id="ut" class="tab">
       <div class="ut-head">
-        <div class="ut-title"><span class="fc-logo">UT</span><div><h2>Somtoday Ultimate Team</h2><p class="hint">Je cijfers zijn je spelers. Bouw je elftal, speel elke dag een wedstrijd en verdien munten.</p></div></div>
+        <div class="ut-title"><span class="fc-logo">UT</span><h2>Somtoday Ultimate Team</h2></div>
         <div class="ut-stats">
           <div class="ut-stat"><span>Rating</span><b id="ut-ovr">0</b></div>
           <div class="ut-stat"><span>Chemie</span><b id="ut-chem">0/33</b><div class="ut-chem-track"><div id="ut-chem-bar"></div></div></div>
@@ -175,10 +175,18 @@
           <div class="ut-stat"><span>Munten</span><b><span class="coin"></span><span class="tm-coins-value">0</span></b></div>
         </div>
       </div>
-      <div id="ut-views" class="ut-views">
-        <button data-view="team" class="active">Mijn team</button>
-        <button data-view="match">Wedstrijden</button>
-        <button data-view="markt">Transfermarkt</button>
+      <div class="ut-bar">
+        <div id="ut-views" class="ut-views">
+          <button data-view="team" class="active">Mijn team</button>
+          <button data-view="match">Wedstrijden</button>
+          <button data-view="markt">Transfermarkt</button>
+        </div>
+        <div class="ut-actions">
+          <label class="ut-form-pick">Opstelling <select id="ut-form"></select></label>
+          <button id="ut-auto">Beste team</button>
+          <button id="ut-clear" class="secondary">Leegmaken</button>
+          <button id="ut-photo-btn" class="secondary desktop-only">Foto</button>
+        </div>
       </div>
       <div id="ut-market-view" hidden>
         <div class="card">
@@ -186,13 +194,13 @@
             <h2>Vandaag op de transfermarkt</h2>
             <span id="tm-refresh" class="hint"></span>
           </div>
-          <p class="hint">Elke dag 8 nieuwe spelers en de prijzen schommelen per dag. Je kunt maximaal 2 spelers per dag kopen. Munten verdien je met nieuwe cijfers en wedstrijden.</p>
+          <p class="hint">Elke dag 8 nieuwe spelers, maximaal 2 kopen per dag.</p>
           <p id="tm-msg" class="tm-msg" aria-live="polite"></p>
           <div id="tm-offers" class="tm-offers"></div>
         </div>
         <div class="card">
           <h2>Spelers verkopen</h2>
-          <p class="hint">Je krijgt 60% van de waarde. Een verkochte speler gaat ook uit je opstelling.</p>
+          <p class="hint">Je krijgt 60% van de waarde.</p>
           <div id="tm-sell" class="tm-sell"></div>
         </div>
       </div>
@@ -214,21 +222,8 @@
             <select id="ut-filter"></select>
           </div>
           <p id="ut-hint" class="hint"></p>
-          <div class="ut-actions">
-            <label class="ut-form-pick">Opstelling <select id="ut-form"></select></label>
-            <button id="ut-auto">Beste team maken</button>
-            <button id="ut-clear" class="secondary">Leegmaken</button>
-            <button id="ut-photo-btn" class="secondary desktop-only">Foto van je team</button>
-          </div>
           <p id="ut-photo-msg" class="hint" aria-live="polite"></p>
           <div id="ut-club" class="ut-club"></div>
-          <details class="ut-help">
-            <summary>Hoe werkt chemie?</summary>
-            <p class="hint">Zoals in FC: een speler krijgt alleen chemie op zijn eigen positie. Punten komen van andere spelers in je elftal met dezelfde
-              <b>club</b> (2/5/7 spelers = 1/2/3 punten), hetzelfde <b>land</b> (2/5/8) of dezelfde <b>competitie</b> (3/5/8). Maximaal 3 per speler, 33 voor het team.</p>
-            <div class="ut-legend"><span><i class="lg-2"></i>Sterke link (zelfde club, of land én competitie)</span><span><i class="lg-1"></i>Zwakke link (land of competitie)</span><span><i class="lg-0"></i>Geen link</span></div><p class="hint">
-              Iconen hebben altijd 3 chemie, tellen dubbel voor hun land en geven elke competitie +1. Hoe meer chemie, hoe sterker je team in wedstrijden.</p>
-          </details>
         </div>
       </div>
       </div>

@@ -452,3 +452,41 @@ body.ut-drag-on { cursor: grabbing; user-select: none; }
 .ut-stat b .coin { width: .8em; height: .8em; margin-right: .25em; vertical-align: -.05em; }
 .ut-stat b .tm-coins-value { font-size: inherit; font-weight: 900; color: #f3d27a; font-variant-numeric: tabular-nums; }
 .ut-stat:has(.tm-coins-value) { padding: 6px 14px; border-radius: 12px; background: linear-gradient(180deg, rgba(243, 198, 77, .14), rgba(243, 198, 77, .04)); border: 1px solid rgba(243, 198, 77, .3); }
+/* meegeleverde, al uitgesneden foto's */
+.fc-img { position: static; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; transform: none; }
+
+/* ---------- Opgeruimde indeling: tabbladen links, teamknoppen rechts op één balk ---------- */
+#ut .ut-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+#ut .ut-bar .ut-views { margin: 0; }
+#ut .ut-bar .ut-actions { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+#ut .ut-bar .ut-actions[hidden] { display: none; }
+#ut .ut-bar .ut-actions button, #ut .ut-bar .ut-form-pick { height: 40px; }
+#ut .ut-title { gap: 12px; }
+#ut .ut-title h2 { margin: 0; }
+#ut .ut-head { padding-top: 12px; padding-bottom: 12px; }
+#ut #ut-hint:empty, #ut #ut-photo-msg:empty { display: none; }
+#ut .ut-side #ut-hint { margin: 0 0 10px; }
+@media (max-width: 700px) {
+  #ut .ut-bar { gap: 8px; }
+  #ut .ut-bar .ut-actions { width: 100%; }
+  #ut .ut-bar .ut-actions button { flex: 1; padding: 0 8px; font-size: 11.5px; letter-spacing: .04em; }
+  #ut .ut-bar .ut-form-pick { padding: 0 4px 0 10px; font-size: 0; gap: 0; }
+  #ut .ut-bar .ut-form-pick select { font-size: 12px; }
+}
+#ut .ut-bar .ut-form-pick { display: inline-flex; flex-direction: row; align-items: center; white-space: nowrap; margin: 0; }
+#ut .ut-bar .ut-form-pick select { width: auto; margin: 0; }
+#ut .ut-bar .ut-actions button { white-space: nowrap; }
+@media (max-width: 700px) {
+  #ut .ut-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
+  #ut .ut-stat { min-width: 0; }
+  #ut .ut-stat span { font-size: 9.5px; }
+  #ut .ut-stat b { font-size: 18px; }
+  #ut .ut-stat:has(.tm-coins-value) { padding: 4px 8px; }
+  #ut .ut-title h2 { font-size: 18px; }
+  #ut .ut-title .fc-logo { width: 40px; height: 40px; }
+}
+@media (max-width: 700px) {
+  #ut #ut-photo-btn { display: none; }
+  #ut .ut-stat b .tm-coins-value { font-size: 18px !important; }
+  #ut .ut-bar .ut-actions button { min-width: 0; }
+}

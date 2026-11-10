@@ -238,12 +238,12 @@ function avatarSVG(p, shirt, mood, nummer) {
 }
 
 // Echte foto van de speler (Wikipedia/Wikimedia Commons), uitgesneden tot hoofd en schouders. Lukt laden niet: getekend poppetje.
-function portrait(p, tier, size) {
-  const src = typeof PHOTOS !== 'undefined' && ((size === 'lg' && typeof PHOTOS_HD !== 'undefined' && PHOTOS_HD[p.key]) || PHOTOS[p.key]);
+// Spelersfoto: al uitgesneden (hoofd en schouders) en meegeleverd met de app, dus snel en ook zonder internet.
+const photoUrl = (p) => (typeof PHOTOS !== 'undefined' && PHOTOS[p.key] ? (window.PHOTO_DIR || 'spelers/') + PHOTOS[p.key] : null);
+function portrait(p, tier) {
+  const src = photoUrl(p);
   if (!src) return avatarSVG(p, p.kit[0], MOODS[tier], '');
-  const f = typeof FACES !== 'undefined' && FACES[p.key];
-  const face = f && f[0] != null ? ` data-f="${f.slice(0, 5).join(',')}"` : '';
-  return `<div class="fc-pic"><img class="fc-img${face ? ' faced' : ''}"${face} src="${esc(src)}" alt="" draggable="false" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-key="${esc(p.key)}" data-tier="${tier}"></div>`;
+  return `<div class="fc-pic"><img class="fc-img" src="${esc(src)}" alt="" draggable="false" decoding="async" data-key="${esc(p.key)}" data-tier="${tier}"></div>`;
 }
 document.addEventListener('error', (e) => {
   const img = e.target;
@@ -521,7 +521,7 @@ function renderTeam() {
   $('#ut-club-count').textContent = `${owned.length} ${owned.length === 1 ? 'kaart' : 'kaarten'}`;
   $('#ut-hint').textContent = selectedSlot
     ? (want ? `Kies een ${POS_NAMES[want] || want}. Alleen op zijn eigen positie krijgt een speler chemie.` : 'Kies een wissel voor op de bank.')
-    : 'Tik op een plek in het veld of op de bank en kies een kaart. Of laat het beste team maken.';
+    : '';
   $('#ut-club').innerHTML = list.map((c) => `
     <button class="ut-club-card ${inTeam.has(c.g.id) ? 'in-team' : ''} ${want && c.player.pos === want ? 'fits' : ''}" data-card="${esc(c.g.id)}">
       ${cardHTML(c, 'md')}${inTeam.has(c.g.id) ? '<span class="ut-badge">In team</span>' : ''}
@@ -749,8 +749,8 @@ setTimeout(() => {
     try {
       loadTeam();
       const ids = new Set(Object.values(team));
-      for (const c of ownedCards()) if (ids.has(c.g.id) && PHOTOS[c.player.key]) { const im = new Image(); im.decoding = 'async'; im.src = PHOTOS[c.player.key]; }
+      for (const c of ownedCards()) if (ids.has(c.g.id) && photoUrl(c.player)) { const im = new Image(); im.decoding = 'async'; im.src = photoUrl(c.player); }
     } catch {}
   };
-  (window.requestIdleCallback || setTimeout)(go, 2500);
+  if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 500);
 }, 3000);

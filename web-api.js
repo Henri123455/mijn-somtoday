@@ -2,6 +2,7 @@
 // en je login staat alleen op deze telefoon. app.js stuurt zijn /api/...-verzoeken hierheen.
 (function () {
   document.documentElement.classList.add('web');
+  window.PHOTO_DIR = 'sp-'; // in de telefoon-app/extensie staan de spelersfoto's als sp-<naam>.jpg naast de app
   const AUTH = 'https://inloggen.somtoday.nl';
   const CLIENT_ID = 'somtoday-leerling-native';
   const KEY = 'som-login';
